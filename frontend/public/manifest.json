@@ -1,0 +1,19 @@
+{
+  "short_name": "Chitralekh",
+  "name": "Chitralekh - Smart Notes & Flowchart Studio",
+  "description": "Smart note-taking with local-first storage, selective cloud sync, and OCR scanner for students",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "any",
+  "categories": ["education", "productivity", "utilities"]
+}

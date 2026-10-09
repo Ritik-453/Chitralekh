@@ -1,0 +1,215 @@
+"""Initial migration
+
+Revision ID: 001
+Revises: 
+Create Date: 2024-01-01 00:00:00.000000
+
+"""
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import mysql
+
+revision = '001'
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.create_table(
+        'users',
+        sa.Column('id', sa.CHAR(36), nullable=False),
+        sa.Column('email', sa.String(length=255), nullable=False),
+        sa.Column('hashed_password', sa.String(length=255), nullable=False),
+        sa.Column('full_name', sa.String(length=255), nullable=True),
+        sa.Column('avatar_url', sa.String(length=500), nullable=True),
+        sa.Column('role', sa.Enum('student', 'teacher', 'admin', name='userrole'), nullable=False, server_default='student'),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('is_verified', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('email_verification_token', sa.String(length=255), nullable=True),
+        sa.Column('password_reset_token', sa.String(length=255), nullable=True),
+        sa.Column('password_reset_expires', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('email'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+    op.create_index('ix_users_email', 'users', ['email'], unique=True)
+
+    op.create_table(
+        'refresh_tokens',
+        sa.Column('id', sa.CHAR(36), nullable=False),
+        sa.Column('user_id', sa.CHAR(36), nullable=False),
+        sa.Column('token', sa.String(length=500), nullable=False),
+        sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('revoked', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('token'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+    op.create_index('ix_refresh_tokens_token', 'refresh_tokens', ['token'], unique=True)
+
+    op.create_table(
+        'oauth_accounts',
+        sa.Column('id', sa.CHAR(36), nullable=False),
+        sa.Column('user_id', sa.CHAR(36), nullable=False),
+        sa.Column('provider', sa.String(length=50), nullable=False),
+        sa.Column('provider_user_id', sa.String(length=255), nullable=False),
+        sa.Column('access_token', sa.Text(), nullable=True),
+        sa.Column('refresh_token', sa.Text(), nullable=True),
+        sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('provider', 'provider_user_id', name='uq_oauth_provider_user'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+
+    op.create_table(
+        'folders',
+        sa.Column('id', sa.CHAR(36), nullable=False),
+        sa.Column('user_id', sa.CHAR(36), nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('color', sa.String(length=7), nullable=False, server_default='#6366f1'),
+        sa.Column('icon', sa.String(length=50), nullable=False, server_default='folder'),
+        sa.Column('parent_id', sa.CHAR(36), nullable=True),
+        sa.Column('sort_order', sa.Integer(), nullable=False, server_default='0'),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+        sa.ForeignKeyConstraint(['parent_id'], ['folders.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+    op.create_index('ix_folders_user_parent', 'folders', ['user_id', 'parent_id'])
+
+    op.create_table(
+        'tags',
+        sa.Column('id', sa.CHAR(36), nullable=False),
+        sa.Column('user_id', sa.CHAR(36), nullable=False),
+        sa.Column('name', sa.String(length=100), nullable=False),
+        sa.Column('color', sa.String(length=7), nullable=False, server_default='#22c55e'),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('user_id', 'name', name='uq_user_tag_name'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+
+    op.create_table(
+        'notes',
+        sa.Column('id', sa.CHAR(36), nullable=False),
+        sa.Column('user_id', sa.CHAR(36), nullable=False),
+        sa.Column('folder_id', sa.CHAR(36), nullable=True),
+        sa.Column('title', sa.String(length=500), nullable=False),
+        sa.Column('content', sa.Text(), nullable=True),
+        sa.Column('content_html', sa.Text(), nullable=True),
+        sa.Column('note_type', sa.Enum('text', 'markdown', 'flowchart', 'diagram', 'code', name='notetype'), nullable=False, server_default='markdown'),
+        sa.Column('is_pinned', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('is_archived', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('is_favorite', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('word_count', sa.Integer(), nullable=False, server_default='0'),
+        sa.Column('reading_time', sa.Integer(), nullable=False, server_default='0'),
+        sa.Column('version', sa.Integer(), nullable=False, server_default='1'),
+        sa.Column('last_edited_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+        sa.ForeignKeyConstraint(['folder_id'], ['folders.id'], ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+    op.create_index('ix_notes_user_folder', 'notes', ['user_id', 'folder_id'])
+    op.create_index('ix_notes_user_pinned', 'notes', ['user_id', 'is_pinned'])
+    op.create_index('ix_notes_user_updated', 'notes', ['user_id', 'updated_at'])
+
+    op.create_table(
+        'note_tags',
+        sa.Column('note_id', sa.CHAR(36), nullable=False),
+        sa.Column('tag_id', sa.CHAR(36), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.ForeignKeyConstraint(['note_id'], ['notes.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['tag_id'], ['tags.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('note_id', 'tag_id'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+
+    op.create_table(
+        'note_versions',
+        sa.Column('id', sa.CHAR(36), nullable=False),
+        sa.Column('note_id', sa.CHAR(36), nullable=False),
+        sa.Column('title', sa.String(length=500), nullable=False),
+        sa.Column('content', sa.Text(), nullable=True),
+        sa.Column('content_html', sa.Text(), nullable=True),
+        sa.Column('version', sa.Integer(), nullable=False),
+        sa.Column('change_summary', sa.String(length=500), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.ForeignKeyConstraint(['note_id'], ['notes.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+    op.create_index('ix_note_versions_note_id', 'note_versions', ['note_id'])
+
+    op.create_table(
+        'user_preferences',
+        sa.Column('user_id', sa.CHAR(36), nullable=False),
+        sa.Column('theme', sa.String(length=20), nullable=False, server_default='system'),
+        sa.Column('font_family', sa.String(length=100), nullable=False, server_default='Inter'),
+        sa.Column('font_size', sa.Integer(), nullable=False, server_default='16'),
+        sa.Column('line_height', sa.Float(), nullable=False, server_default='1.6'),
+        sa.Column('editor_mode', sa.String(length=20), nullable=False, server_default='split'),
+        sa.Column('auto_save', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('auto_save_interval', sa.Integer(), nullable=False, server_default='5000'),
+        sa.Column('show_line_numbers', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('word_wrap', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('vim_mode', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('sidebar_width', sa.Integer(), nullable=False, server_default='280'),
+        sa.Column('show_toolbar', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('show_status_bar', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('language', sa.String(length=10), nullable=False, server_default='en'),
+        sa.Column('date_format', sa.String(length=20), nullable=False, server_default='YYYY-MM-DD'),
+        sa.Column('time_format', sa.String(length=10), nullable=False, server_default='24h'),
+        sa.Column('notifications_enabled', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('email_notifications', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('user_id'),
+        mysql_charset='utf8mb4',
+        mysql_collate='utf8mb4_unicode_ci',
+    )
+
+
+def downgrade() -> None:
+    op.drop_table('user_preferences')
+    op.drop_index('ix_note_versions_note_id', table_name='note_versions')
+    op.drop_table('note_versions')
+    op.drop_table('note_tags')
+    op.drop_index('ix_notes_user_updated', table_name='notes')
+    op.drop_index('ix_notes_user_pinned', table_name='notes')
+    op.drop_index('ix_notes_user_folder', table_name='notes')
+    op.drop_table('notes')
+    op.drop_table('tags')
+    op.drop_index('ix_folders_user_parent', table_name='folders')
+    op.drop_table('folders')
+    op.drop_table('oauth_accounts')
+    op.drop_index('ix_refresh_tokens_token', table_name='refresh_tokens')
+    op.drop_table('refresh_tokens')
+    op.drop_index('ix_users_email', table_name='users')
+    op.drop_table('users')
+    
+    op.execute('DROP TYPE IF EXISTS userrole')
+    op.execute('DROP TYPE IF EXISTS notetype')

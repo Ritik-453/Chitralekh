@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="penGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="nodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle container -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.5"/>
+
+  <!-- Flowchart branches & connecting circuits -->
+  <g stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
+    <!-- Center to nodes -->
+    <path d="M36 30 L26 22 L18 22" />
+    <path d="M36 30 L22 34 L16 34" />
+    <path d="M36 30 L28 42 L22 48 L16 48" />
+    <path d="M36 30 L38 44 L44 50" />
+  </g>
+
+  <!-- Flowchart Nodes (Small rounded boxes & circles) -->
+  <!-- Top Node -->
+  <rect x="12" y="18" width="8" height="8" rx="2" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <!-- Middle Node -->
+  <circle cx="14" cy="34" r="3.5" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+  <!-- Bottom Node -->
+  <rect x="11" y="44" width="8" height="8" rx="2" fill="#0f172a" stroke="#06b6d4" stroke-width="2"/>
+  <!-- Bottom-Right Node -->
+  <circle cx="45" cy="50" r="3.5" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+
+  <!-- Stylus / Digital Pen (Chitralekh Quill) -->
+  <g filter="url(#glow)">
+    <!-- Pen Barrel -->
+    <path d="M48 12 L53 17 L39 31 L34 26 Z" fill="url(#penGrad)" />
+    <!-- Pen Nib -->
+    <path d="M34 26 L39 31 L34 34 Z" fill="#f59e0b" />
+    <!-- Glowing nib tip -->
+    <circle cx="34" cy="34" r="1.5" fill="#ffffff" />
+  </g>
+</svg>
