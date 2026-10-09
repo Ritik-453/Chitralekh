@@ -903,11 +903,11 @@ function DataSettings() {
       console.error('Failed to load storage paths:', err);
       // Reliable local fallback for Windows host
       setStorageInfo({
-        database_path: 'C:\\Users\\thukr\\Desktop\\NOTES\\NVIDIA PROJECTS\\notes-app\\backend\\notes_app.db',
+        database_path: 'C:\\Users\\thukr\\Desktop\\NOTES\\NVIDIA PROJECTS\\chitralekh\\backend\\notes_app.db',
         database_filename: 'notes_app.db',
         database_exists: true,
         database_size_bytes: 524288,
-        uploads_path: 'C:\\Users\\thukr\\Desktop\\NOTES\\NVIDIA PROJECTS\\notes-app\\backend\\uploads',
+        uploads_path: 'C:\\Users\\thukr\\Desktop\\NOTES\\NVIDIA PROJECTS\\chitralekh\\backend\\uploads',
         uploads_exists: true,
         uploads_size_bytes: 1048576,
         uploads_file_count: 5,

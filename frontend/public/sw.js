@@ -1,5 +1,5 @@
 // Notes App Service Worker for Offline First support (PWA)
-const CACHE_NAME = 'notes-app-v1';
+const CACHE_NAME = 'chitralekh-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
