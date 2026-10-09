@@ -1,6 +1,6 @@
-# Notes App
+# Chitralekh (चित्रलेख) — Smart Notes & Flowcharts
 
-A production-ready notes management web application for students with flowcharts, search, customization, and more.
+A production-ready notes management and flowchart studio for students with diagrams, OCR, search, customization, and more.
 
 > 📖 **Comprehensive Specification**: For an in-depth architectural breakdown, database models, REST API catalog, and detailed feature list, see [APP_DESCRIPTION_AND_FEATURES.md](APP_DESCRIPTION_AND_FEATURES.md).
 
@@ -62,8 +62,8 @@ A production-ready notes management web application for students with flowcharts
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd notes-app
+git clone https://github.com/Ritik-453/chitrlekh.git
+cd chitralekh
 
 # Copy environment file
 cp backend/.env.example backend/.env
