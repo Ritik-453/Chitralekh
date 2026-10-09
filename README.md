@@ -118,7 +118,7 @@ npm run dev
 ## Project Structure
 
 ```
-notes-app/
+chitralekh/
 ├── backend/
 │   ├── app/
 │   │   ├── api/          # API routes

@@ -175,7 +175,7 @@ export const localStorageService = {
 
       const backupData = {
         exportedAt: new Date().toISOString(),
-        appName: 'Notes App',
+        appName: 'Chitralekh',
         totalNotes: notes.length,
         notes: notes,
         diagrams: diagrams,
@@ -235,7 +235,7 @@ export const localStorageService = {
 
       const backupData = {
         exportedAt: new Date().toISOString(),
-        appName: 'Notes App',
+        appName: 'Chitralekh',
         totalNotes: notes.length,
         notes: notes,
         diagrams: diagrams,

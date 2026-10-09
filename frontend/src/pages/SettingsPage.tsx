@@ -687,7 +687,7 @@ function CloudSyncSettings({ user }: { user: any }) {
                 <span className="font-semibold text-primary-600">~0.1%</span>
               </div>
               <p className="text-[11px] text-secondary-400 pt-0.5">
-                Notes App consumes less than 15 MB of your 15 GB free personal Google Drive quota.
+                Chitralekh consumes less than 15 MB of your 15 GB free personal Google Drive quota.
               </p>
             </div>
           </div>
@@ -932,7 +932,7 @@ function DataSettings() {
 
   const handleCopyAll = () => {
     if (!storageInfo) return;
-    const text = `Notes App Storage Paths on Device:\n1. SQLite Database: ${storageInfo.database_path}\n2. Uploads Directory: ${storageInfo.uploads_path}`;
+    const text = `Chitralekh Storage Paths on Device:\n1. SQLite Database: ${storageInfo.database_path}\n2. Uploads Directory: ${storageInfo.uploads_path}`;
     navigator.clipboard.writeText(text);
     setCopiedKey('all');
     toast.success('All storage paths copied to clipboard!');
@@ -1201,7 +1201,7 @@ function AdvancedSettings({ handleSavePreferences, handleResetPreferences, isSav
       <section>
         <h2 className="text-lg font-semibold text-secondary-900 dark:text-white mb-4">About</h2>
         <div className="card p-4">
-          <p className="text-secondary-600 dark:text-secondary-400">Notes App v1.0.0</p>
+          <p className="text-secondary-600 dark:text-secondary-400">Chitralekh v1.0.0</p>
           <p className="text-sm text-secondary-500 mt-2">Built with React, FastAPI, and SQLite Local Engine</p>
         </div>
       </section>

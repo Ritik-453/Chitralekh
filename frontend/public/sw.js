@@ -1,4 +1,4 @@
-// Notes App Service Worker for Offline First support (PWA)
+// Chitralekh Service Worker for Offline First support (PWA)
 const CACHE_NAME = 'chitralekh-v1';
 const STATIC_ASSETS = [
   '/',

@@ -65,7 +65,7 @@ async def health_check():
 @app.get("/")
 async def root():
     return {
-        "message": "Notes App API",
+        "message": "Chitralekh API",
         "version": settings.VERSION,
         "docs": f"{settings.API_V1_STR}/docs",
     }

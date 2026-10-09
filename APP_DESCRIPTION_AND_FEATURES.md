@@ -1,8 +1,8 @@
-# Notes App — Comprehensive Application Description & Feature Specification
+# Chitralekh (चित्रलेख) — Comprehensive Application Description & Feature Specification
 
 ## 1. Executive Summary & Overview
 
-**Notes App** is a modern, high-performance, full-stack personal knowledge management (PKM) and notes application engineered for students, researchers, developers, and technical writers. The application blends distraction-free **Markdown authoring**, interactive **Mermaid.js flowcharting & diagramming**, **hierarchical folder trees**, **color-coded multidimensional tagging**, **instant global full-text search**, and extensive **user customization** into a sleek, responsive dark/light interface.
+**Chitralekh (चित्रलेख)** is a modern, high-performance, full-stack personal knowledge management (PKM) and notes application engineered for students, researchers, developers, and technical writers. The application blends distraction-free **Markdown authoring**, interactive **Mermaid.js flowcharting & diagramming**, **hierarchical folder trees**, **color-coded multidimensional tagging**, **instant global full-text search**, and extensive **user customization** into a sleek, responsive dark/light interface.
 
 ### Key Value Propositions
 - **Unified Knowledge Workspace**: Write technical notes, documentation, lecture summaries, and visual architecture diagrams side-by-side in a single application.
@@ -455,7 +455,7 @@ All routes are versioned under `/api/v1` and protected via JWT Bearer authentica
 ## 7. Application Directory Structure
 
 ```
-notes-app/
+chitralekh/
 ├── backend/
 │   ├── alembic/                  # Database migration scripts & env
 │   ├── app/
