@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     DATABASE_URL_SYNC: str = "sqlite:///:memory:"
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    BACKEND_CORS_ORIGINS: List[str] = []
 
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
@@ -53,8 +53,18 @@ class Settings(BaseSettings):
 
     @_cors_validator("BACKEND_CORS_ORIGINS")
     def assemble_cors_origins(cls, v: str | List[str]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return [str(i).strip() for i in parsed if str(i).strip()]
+                except Exception:
+                    pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, tuple, set)):
+            return [str(i).strip() for i in v if str(i).strip()]
         return v
 
     if PV2:
