@@ -24,8 +24,9 @@ services:
           property: connectionString
 
   # Frontend (React 18 + Vite Static Site)
-  - type: static
+  - type: web
     name: chitralekh-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
