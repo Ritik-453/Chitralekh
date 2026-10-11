@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Github, Globe } from 'lucide-react';
 import { cn } from '../utils';
+import { API_URL } from '../services/api';
 import toast from 'react-hot-toast';
 
 export function LoginPage() {
@@ -44,7 +45,7 @@ export function LoginPage() {
   };
 
   const handleOAuthLogin = (provider: string) => {
-    window.location.href = `${import.meta.env.VITE_API_URL || '/api/v1'}/auth/oauth/${provider}`;
+    window.location.href = `${API_URL}/auth/oauth/${provider}`;
   };
 
   return (

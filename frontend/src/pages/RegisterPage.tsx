@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Github, Globe, CheckCircle } from 'lucide-react';
 import { cn } from '../utils';
+import { API_URL } from '../services/api';
 import toast from 'react-hot-toast';
 
 export function RegisterPage() {
@@ -63,7 +64,7 @@ export function RegisterPage() {
   };
 
   const handleOAuthLogin = (provider: string) => {
-    window.location.href = `${import.meta.env.VITE_API_URL || '/api/v1'}/auth/oauth/${provider}`;
+    window.location.href = `${API_URL}/auth/oauth/${provider}`;
   };
 
   const passwordStrength = getPasswordStrength(formData.password);

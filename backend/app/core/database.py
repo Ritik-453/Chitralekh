@@ -31,10 +31,21 @@ def get_engine_kwargs(database_url: str) -> dict:
     return {}
 
 
+def normalize_db_url(url: str) -> str:
+    """Ensure PostgreSQL URLs use the asyncpg driver for async SQLAlchemy."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql://") and "+asyncpg" not in url:
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+
+_async_db_url = normalize_db_url(settings.DATABASE_URL)
+
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    _async_db_url,
     echo=settings.DEBUG,
-    **get_engine_kwargs(settings.DATABASE_URL),
+    **get_engine_kwargs(_async_db_url),
 )
 
 AsyncSessionLocal = async_sessionmaker(

@@ -1,7 +1,14 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { AuthTokens, LoginCredentials, RegisterData, Note, NoteCreate, NoteUpdate, Folder, FolderCreate, FolderUpdate, Tag, TagCreate, TagUpdate, User, UserPreferences, PreferencesUpdate, PaginatedResponse, SearchParams, FlowchartData, OAuthAccount, NoteVersion, FileConvertResponse, CentralRepoItem, CentralRepoItemCreate, CentralRepoVersionCreate, CentralRepoItemListResponse, CentralRepoMeta, StoragePathsInfo, CloudSyncStatus, CentralRepoCloudInfo } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const getBaseApiUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return '/api/v1';
+  const clean = envUrl.replace(/\/+$/, '');
+  return clean.endsWith('/api/v1') ? clean : `${clean}/api/v1`;
+};
+
+export const API_URL = getBaseApiUrl();
 
 const api = axios.create({
   baseURL: API_URL,
