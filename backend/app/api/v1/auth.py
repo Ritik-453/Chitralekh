@@ -1,11 +1,13 @@
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import secrets
 import httpx
+import os
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -212,8 +214,15 @@ async def delete_account(
     return {"message": "Account deleted successfully"}
 
 
+def get_oauth_redirect_uri(request: Request, provider: str) -> str:
+    base = os.environ.get("RENDER_EXTERNAL_URL") or str(request.base_url).rstrip('/')
+    if base.startswith("http://") and "localhost" not in base:
+        base = "https://" + base[len("http://"):]
+    return f"{base}{settings.API_V1_STR}/auth/oauth/{provider}/callback"
+
+
 @router.get("/oauth/{provider}")
-async def oauth_login(provider: str):
+async def oauth_login(provider: str, request: Request):
     if provider not in ["google", "github", "microsoft"]:
         raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
     
@@ -225,21 +234,26 @@ async def oauth_login(provider: str):
     
     client_id = client_id_map.get(provider)
     if not client_id:
-        raise HTTPException(status_code=400, detail=f"{provider} OAuth not configured")
+        raise HTTPException(
+            status_code=400,
+            detail=f"{provider} OAuth not configured. Please set {provider.upper()}_CLIENT_ID and {provider.upper()}_CLIENT_SECRET in environment variables, or sign in with email/password."
+        )
     
+    cb_url = get_oauth_redirect_uri(request, provider)
     redirect_url_map = {
-        "google": f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&redirect_uri={settings.API_V1_STR}/auth/oauth/google/callback&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent",
-        "github": f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={settings.API_V1_STR}/auth/oauth/github/callback&scope=read:user%20user:email",
-        "microsoft": f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={client_id}&redirect_uri={settings.API_V1_STR}/auth/oauth/microsoft/callback&response_type=code&scope=openid%20email%20profile%20offline_access",
+        "google": f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&redirect_uri={cb_url}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent",
+        "github": f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={cb_url}&scope=read:user%20user:email",
+        "microsoft": f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={client_id}&redirect_uri={cb_url}&response_type=code&scope=openid%20email%20profile%20offline_access",
     }
     
-    return {"redirect_url": redirect_url_map[provider]}
+    return RedirectResponse(url=redirect_url_map[provider])
 
 
 @router.get("/oauth/{provider}/callback")
 async def oauth_callback(
     provider: str,
     code: str,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     if provider not in ["google", "github", "microsoft"]:
@@ -274,6 +288,7 @@ async def oauth_callback(
         "microsoft": "https://graph.microsoft.com/v1.0/me",
     }
     
+    cb_url = get_oauth_redirect_uri(request, provider)
     async with httpx.AsyncClient() as client:
         token_response = await client.post(
             token_url_map[provider],
@@ -282,7 +297,7 @@ async def oauth_callback(
                 "client_secret": client_secret,
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": f"{settings.API_V1_STR}/auth/oauth/{provider}/callback",
+                "redirect_uri": cb_url,
             },
             headers={"Accept": "application/json"},
         )
@@ -395,7 +410,19 @@ async def oauth_callback(
         db.add(rt)
         await db.commit()
         
-        return Token(access_token=access_token_jwt, refresh_token=refresh_token_jwt)
+        # Redirect back to frontend with tokens
+        frontend_url = os.environ.get("FRONTEND_URL") or "https://chitralekh-frontend.onrender.com"
+        redirect_target = f"{frontend_url}/login?token={access_token_jwt}&refresh={refresh_token_jwt}"
+        res = RedirectResponse(url=redirect_target)
+        res.set_cookie(
+            key="refresh_token",
+            value=refresh_token_jwt,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite="lax",
+            max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        )
+        return res
 
 
 @router.get("/oauth/accounts", response_model=list[OAuthAccountResponse])

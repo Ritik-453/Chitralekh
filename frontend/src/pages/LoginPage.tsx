@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Github, Globe } from 'lucide-react';
 import { cn } from '../utils';
-import { API_URL } from '../services/api';
+import { API_URL, setAccessToken } from '../services/api';
 import toast from 'react-hot-toast';
 
 export function LoginPage() {
@@ -16,6 +16,19 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const refresh = params.get('refresh');
+    if (token) {
+      const authTokens = { access_token: token, refresh_token: refresh || '', token_type: 'bearer' };
+      localStorage.setItem('auth_tokens', JSON.stringify(authTokens));
+      setAccessToken(token);
+      toast.success('Successfully signed in with OAuth!');
+      window.location.href = '/';
+    }
+  }, []);
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
