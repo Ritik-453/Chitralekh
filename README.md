@@ -1,319 +1,226 @@
-# Chitralekh (चित्रलेख) — Smart Notes & Flowcharts
+<p align="center">
+  <img src="chitralekh-icon.jpg" width="120" height="120" alt="Chitralekh Icon" style="border-radius: 24px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);" />
+</p>
 
-A production-ready notes management and flowchart studio for students with diagrams, OCR, search, customization, and more.
+<h1 align="center">Chitralekh (चित्रलेख)</h1>
 
-> 📖 **Comprehensive Specification**: For an in-depth architectural breakdown, database models, REST API catalog, and detailed feature list, see [APP_DESCRIPTION_AND_FEATURES.md](APP_DESCRIPTION_AND_FEATURES.md).
+<p align="center">
+  <strong>The Visual Notes Studio & Academic Knowledge Repository</strong>
+</p>
 
-## Features
+<!-- MOVING CHARACTERS / ANIMATED TYPING SVG -->
+<p align="center">
+  <a href="https://chitralekh-frontend.onrender.com">
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&duration=3000&pause=1200&color=6366F1&center=true&vCenter=true&width=650&lines=Chitralekh+(चित्रलेख)+—+Visual+Notes+Studio;Craft+Markdown+%2B+Mermaid+Flowcharts;Instant+Guest+Mode+%E2%9A%A1+Zero+Signup+Required;Central+Academic+Knowledge+Repository;Pass+down+knowledge+across+college+batches!" alt="Typing Header" />
+  </a>
+</p>
 
-- **Notes Management**: Create, edit, organize, and search notes
-- **Document & Image Conversion (OCR)**: Extract and convert Images (OCR via Tesseract), PDFs, and Word Documents (.docx) into editable Markdown notes
-- **Multiple Note Types**: Markdown, Flowcharts, Diagrams, Code, Text
-- **Flowchart Editor**: Mermaid.js support with live preview, templates, and export
-- **Organization**: Nested folders, tags with colors, pinning, favorites, archiving
-- **Search & Filters**: Full-text search, filters by folder, tag, type, date
-- **Customization**: Light/dark/system themes, fonts, editor settings, layout options
-- **Table of Contents**: Auto-generated from headings
-- **Version History**: Track changes and restore previous versions
-- **Authentication**: Email/password + OAuth (Google, GitHub, Microsoft)
-- **Responsive Design**: Works on mobile and desktop
-- **Offline Support**: Service worker for offline access
-- **Accessibility**: WCAG 2.1 AA compliant
+<p align="center">
+  <a href="https://chitralekh-frontend.onrender.com"><img src="https://img.shields.io/badge/🚀%20Live%20Demo-chitralekh--frontend.onrender.com-6366F1?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" /></a>
+  <a href="https://chitralekh-backend-fj80.onrender.com/docs"><img src="https://img.shields.io/badge/⚡%20API%20Docs-FastAPI%20Swagger-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="API Docs" /></a>
+  <a href="https://github.com/Ritik-453/Chitralekh/stargazers"><img src="https://img.shields.io/github/stars/Ritik-453/Chitralekh?style=for-the-badge&color=F59E0B&logo=github" alt="Stars" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
+</p>
 
-## Tech Stack
+<p align="center">
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 18" />
+  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-5.0-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.12" />
+  <img src="https://img.shields.io/badge/FastAPI-0.110-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Mermaid.js-Diagrams-FF3670?style=flat-square&logo=mermaid&logoColor=white" alt="Mermaid" />
+</p>
 
-### Backend
-- **FastAPI** - Modern, fast web framework
-- **MySQL 8.0** - Primary database
-- **SQLAlchemy 2.0** - Async ORM
-- **Alembic** - Database migrations
-- **Redis** - Caching and sessions
-- **JWT** - Authentication tokens
-- **Passlib** - Password hashing
-- **Pydantic** - Data validation
+---
 
-### Frontend
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **Zustand** - State management
-- **React Router** - Routing
-- **React Markdown** - Markdown rendering
-- **Mermaid.js** - Flowchart rendering
-- **React Hot Toast** - Notifications
-- **@dnd-kit** - Drag and drop
+## 🌟 The Philosophy behind "चित्रलेख" (Chitralekh)
 
-### DevOps
-- **Docker** - Containerization
-- **Docker Compose** - Local development
-- **GitHub Actions** - CI/CD
-- **PostgreSQL** - Production database
-- **Redis** - Production cache
+> *"चित्रं च लेखं च यत्र मिलतः, तत्र ज्ञानं प्रकाशते।"*  
+> *(Where imagery and mindful writing unite, knowledge illuminates.)*
 
-## Quick Start
+The name blends two classical Sanskrit roots:
+* **चित्र (Chitra)**: Visual imagery, blueprints, diagrams, and architecture.
+* **लेख (Lekha)**: Mindful inscription, notes, documentation, and literature.
 
-### Prerequisites
-- Docker and Docker Compose
-- Node.js 20+ (for local frontend development)
-- Python 3.12+ (for local backend development)
+Every semester, students solve complex proofs, whiteboard system designs, and build study guides — yet **90% of that student knowledge vanishes** across batch transitions. **Chitralekh** transforms private ephemeral notes into persistent visual artifacts and a shared academic legacy.
 
-### Using Docker (Recommended)
+---
+
+## 📸 Visual Showcase
+
+<p align="center">
+  <img src="assets/hero-showcase.jpg" width="100%" alt="Chitralekh Hero Showcase" style="border-radius: 12px; border: 1px solid #334155;" />
+</p>
+
+<table width="100%">
+  <tr>
+    <td width="50%" align="center">
+      <strong>💻 Visual Note & Flowchart Studio</strong><br/><br/>
+      <img src="assets/editor-preview.jpg" width="100%" alt="Editor Preview" style="border-radius: 8px;" />
+    </td>
+    <td width="50%" align="center">
+      <strong>🏛️ Central Academic Repository</strong><br/><br/>
+      <img src="assets/central-repository.jpg" width="100%" alt="Central Repository" style="border-radius: 8px;" />
+    </td>
+  </tr>
+</table>
+
+---
+
+## ✨ Core Superpowers
+
+| Feature | Description | Status |
+| :--- | :--- | :---: |
+| ⚡ **Instant Guest Mode** | Try the full editor & diagrams in **1-click** with zero signup friction. Notes save to local IndexedDB. | ✅ Live |
+| 📊 **Mermaid.js Flowcharts** | Real-time code-to-diagram engine for system architectures, algorithms, state machines, and mindmaps. | ✅ Live |
+| 📐 **LaTeX Math Engine** | Native rendering for complex mathematical equations, proofs, and machine learning formulations. | ✅ Live |
+| 🏛️ **Central Knowledge Hub** | Pass down curriculum notes across college batches. Search, study, like, and download community notes. | ✅ Live |
+| 🔄 **Heritage & Version Forking** | Fork any peer note into your workspace or contribute updated versions (`v1 → v2`) preserving credit. | ✅ Live |
+| 📷 **Document Scanner & OCR** | Convert physical whiteboard snaps, lecture PDFs, and paper docs into clean editable Markdown. | ✅ Live |
+| 💾 **Local-First + Cloud Sync** | Draft zero-latency offline notes stored locally with instant cloud backup upon login. | ✅ Live |
+| 🎨 **Theme & Customization** | Dark, Light, and Cyberpunk high-contrast themes with custom monospace fonts and split layouts. | ✅ Live |
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    User([👤 User / Student]) --> ModeCheck{Authentication?}
+    
+    %% Guest Pathway
+    ModeCheck -- "Guest Mode (1-Click)" --> GuestPath["⚡ Instant Local Session"]
+    GuestPath --> IndexedDB[("💾 Browser IndexedDB\nZero Latency Offline Storage")]
+    GuestPath --> PreviewStudio["🎨 Live Markdown + Mermaid + KaTeX Editor"]
+    
+    %% Registered Pathway
+    ModeCheck -- "Login / OAuth" --> AuthAPI["🔐 FastAPI JWT Auth\nGoogle • GitHub • Microsoft"]
+    AuthAPI --> CloudDB[("🐘 PostgreSQL Cloud Database")]
+    
+    %% Central Repository Hub
+    PreviewStudio -. "Want Cloud Save / Upload?" .-> Gatekeep{"Sign In Prompt"}
+    Gatekeep -- Authenticated --> CentralRepo["🏛️ Central Academic Repository"]
+    CloudDB <--> CentralRepo
+    
+    CentralRepo --> FutureBatch["🎓 Future Student Batches\nFork, Learn, & Contribute Versions"]
+```
+
+---
+
+## ⚡ Quick Start
+
+### 1. Try Live in Browser (Zero Setup)
+No installation or signup required:
+👉 **[Open Chitralekh Live](https://chitralekh-frontend.onrender.com)** and click **"Continue as Guest (Try app instantly) 🚀"**
+
+---
+
+### 2. Run Locally with Docker (Recommended)
 
 ```bash
 # Clone the repository
-git clone https://github.com/Ritik-453/chitrlekh.git
-cd chitralekh
+git clone https://github.com/Ritik-453/Chitralekh.git
+cd Chitralekh
 
-# Copy environment file
+# Configure environment variables
 cp backend/.env.example backend/.env
 
-# Edit .env with your settings
-# Required: SECRET_KEY, DATABASE_URL, REDIS_URL
-
-# Start all services
+# Spin up backend, frontend, database, and redis
 docker-compose up -d
 
-# Access the application
+# Open in your browser:
 # Frontend: http://localhost:5173
-# Backend API: http://localhost:8000
-# API Docs: http://localhost:8000/api/v1/docs
+# Backend API: http://localhost:8000/docs
 ```
 
-### Local Development
+---
 
-#### Backend
+### 3. Local Development Setup
+
+#### Backend (FastAPI + Python 3.12)
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
+# On Windows:
+venv\Scripts\activate
+# On Linux/macOS:
+# source venv/bin/activate
+
 pip install -r requirements.txt
-
-# Set up environment
-cp .env.example .env
-# Edit .env with your settings
-
-# Run migrations
 alembic upgrade head
-
-# Start development server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-#### Frontend
+#### Frontend (React 18 + Vite + TypeScript)
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-## Project Structure
+---
+
+## ⌨️ Productivity Keyboard Shortcuts
+
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| <kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd> | **Global Search** | Instant full-text fuzzy note search |
+| <kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>N</kbd> | **New Note** | Instantiate a blank note with template picker |
+| <kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>S</kbd> | **Save Note** | Save locally (IndexedDB) or sync to cloud |
+| <kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>/</kbd> | **Toggle Split** | Switch between code, split, and full diagram preview |
+| <kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>B</kbd> | **Bold** | Format selected text as bold |
+| <kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>I</kbd> | **Italic** | Format selected text as italic |
+| <kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>E</kbd> | **Code Snippet** | Wrap inline code syntax |
+| <kbd>⌘</kbd> / <kbd>Shift</kbd> + <kbd>F</kbd> | **Zen Mode** | Distraction-free fullscreen editor |
+
+---
+
+## 📂 Repository Organization
 
 ```
-chitralekh/
-├── backend/
+Chitralekh/
+├── assets/                  # High-res UI mockups, diagrams, and media
+├── backend/                 # FastAPI REST application
 │   ├── app/
-│   │   ├── api/          # API routes
-│   │   │   └── v1/       # API version 1
-│   │   ├── core/         # Core configuration
-│   │   ├── models/       # Database models
-│   │   ├── schemas/      # Pydantic schemas
-│   │   ├── services/     # Business logic
-│   │   └── utils/        # Utilities
-│   ├── alembic/          # Database migrations
-│   ├── tests/            # Tests
-│   ├── Dockerfile
+│   │   ├── api/v1/          # Endpoints: Notes, Folders, Repository, OCR, Flowcharts
+│   │   ├── core/            # Config, Security, JWT & OAuth providers
+│   │   ├── models/          # SQLAlchemy async ORM models
+│   │   └── services/        # OCR Tesseract, WebP compression, Central repo logic
+│   ├── alembic/             # Database migration revisions
 │   └── requirements.txt
-├── frontend/
+├── frontend/                # React 18 + TypeScript + Vite SPA
 │   ├── src/
-│   │   ├── components/   # Reusable components
-│   │   ├── pages/        # Page components
-│   │   ├── hooks/        # Custom hooks
-│   │   ├── context/      # React context
-│   │   ├── services/     # API services
-│   │   ├── types/        # TypeScript types
-│   │   ├── utils/        # Utilities
-│   │   └── styles/       # Global styles
-│   ├── public/
-│   ├── Dockerfile
-│   └── package.json
-├── docker-compose.yml
-└── README.md
+│   │   ├── components/      # UI components (Editor, Flowcharts, GuestBanner, Modals)
+│   │   ├── context/         # AuthContext with 1-Click Guest Mode support
+│   │   ├── hooks/           # useNotes, useEditor, useFlowcharts
+│   │   ├── pages/           # NoteEditor, CentralRepository, Login, Dashboard
+│   │   └── services/        # Axios API client & IndexedDB localStorageService
+├── docker-compose.yml       # Multi-container orchestration
+└── render.yaml              # Production Render Blueprint configuration
 ```
 
-## Environment Variables
+---
 
-### Backend (.env)
-```env
-# Database
-DATABASE_URL=mysql+aiomysql://user:pass@localhost:3306/notes_app?charset=utf8mb4
-DATABASE_URL_SYNC=mysql+pymysql://user:pass@localhost:3306/notes_app?charset=utf8mb4
+## 🤝 Contributing
 
-# Redis
-REDIS_URL=redis://localhost:6379/0
+Contributions make open-source an inspiring place to learn and build.
+1. **Fork** the Project
+2. Create your Feature Branch (`git checkout -b feat/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'feat: Add AmazingFeature'`)
+4. Push to the Branch (`git push origin feat/AmazingFeature`)
+5. Open a **Pull Request**
 
-# Security
-SECRET_KEY=your-secret-key-min-32-chars
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
+---
 
-# CORS
-CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
+## 📜 License & Acknowledgments
 
-# OAuth (optional)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-MICROSOFT_CLIENT_ID=
-MICROSOFT_CLIENT_SECRET=
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
-# App
-DEBUG=true
-ENVIRONMENT=development
-```
+Crafted with ❤️ for students, researchers, and engineers by [Ritik](https://github.com/Ritik-453).
 
-### Frontend (.env)
-```env
-VITE_API_URL=http://localhost:8000/api/v1
-```
-
-## API Documentation
-
-Once the backend is running, visit:
-- Swagger UI: `http://localhost:8000/api/v1/docs`
-- ReDoc: `http://localhost:8000/api/v1/redoc`
-- OpenAPI JSON: `http://localhost:8000/api/v1/openapi.json`
-
-## Key API Endpoints
-
-### Authentication
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login
-- `POST /api/v1/auth/refresh` - Refresh access token
-- `POST /api/v1/auth/logout` - Logout
-- `GET /api/v1/auth/me` - Get current user
-- `GET /api/v1/auth/oauth/{provider}` - OAuth login
-
-### Notes
-- `GET /api/v1/notes` - List notes (with filters)
-- `POST /api/v1/notes` - Create note
-- `GET /api/v1/notes/{id}` - Get note
-- `PATCH /api/v1/notes/{id}` - Update note
-- `DELETE /api/v1/notes/{id}` - Delete note
-- `POST /api/v1/notes/{id}/pin` - Toggle pin
-- `POST /api/v1/notes/{id}/favorite` - Toggle favorite
-- `POST /api/v1/notes/{id}/archive` - Toggle archive
-- `GET /api/v1/notes/{id}/versions` - Get versions
-- `POST /api/v1/notes/{id}/versions/{version_id}/restore` - Restore version
-
-### Folders
-- `GET /api/v1/folders` - List folders (tree)
-- `POST /api/v1/folders` - Create folder
-- `PATCH /api/v1/folders/{id}` - Update folder
-- `DELETE /api/v1/folders/{id}` - Delete folder
-- `POST /api/v1/folders/reorder` - Reorder folders
-
-### Tags
-- `GET /api/v1/tags` - List tags
-- `POST /api/v1/tags` - Create tag
-- `PATCH /api/v1/tags/{id}` - Update tag
-- `DELETE /api/v1/tags/{id}` - Delete tag
-
-### Search
-- `GET /api/v1/search/notes` - Search notes
-- `GET /api/v1/search/suggestions` - Get search suggestions
-- `GET /api/v1/search/stats` - Get statistics
-
-### Flowcharts
-- `POST /api/v1/flowcharts/validate` - Validate Mermaid code
-- `POST /api/v1/flowcharts/render` - Render to SVG
-- `POST /api/v1/flowcharts/export` - Export diagram
-- `GET /api/v1/flowcharts/templates` - Get templates
-- `GET /api/v1/flowcharts/themes` - Get themes
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `⌘K` | Open search |
-| `⌘N` | New note |
-| `⌘S` | Save note |
-| `⌘B` | Bold |
-| `⌘I` | Italic |
-| `⌘E` | Inline code |
-| `⌘1/2/3` | Heading 1/2/3 |
-| `⌘Shift+8` | Bullet list |
-| `⌘Shift+7` | Numbered list |
-| `⌘Shift+Q` | Quote block |
-| `⌘Shift+X` | Strikethrough |
-| `⌘Enter` | Save note |
-| `Esc` | Close modals |
-| `⌘/` | Toggle preview |
-| `⌘Shift+F` | Fullscreen editor |
-
-## Deployment
-
-### Production Checklist
-- [ ] Set strong `SECRET_KEY` (32+ chars)
-- [ ] Configure production `DATABASE_URL`
-- [ ] Configure production `REDIS_URL`
-- [ ] Set `DEBUG=false`
-- [ ] Set `ENVIRONMENT=production`
-- [ ] Configure OAuth credentials
-- [ ] Set up HTTPS/TLS
-- [ ] Configure CORS origins
-- [ ] Set up database backups
-- [ ] Configure monitoring/logging
-- [ ] Set up CI/CD pipeline
-
-### Docker Production
-```bash
-# Build images
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
-
-# Deploy
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-## Testing
-
-### Backend
-```bash
-cd backend
-pytest --cov=app --cov-report=html
-```
-
-### Frontend
-```bash
-cd frontend
-npm run test
-npm run test:ui
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linters
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Support
-
-- Documentation: `/help` in the app
-- Issues: GitHub Issues
-- Discussions: GitHub Discussions
+<p align="center">
+  <a href="#chitralekh-चित्रलेख">⬆ Back to Top</a>
+</p>
