@@ -18,6 +18,71 @@ export function useNotes(initialParams?: SearchParams) {
 
   const fetchNotes = useCallback(async () => {
     setIsLoading(true);
+    const isGuest = localStorage.getItem('is_guest_mode') === 'true';
+    if (isGuest) {
+      let localNotes = await localStorageService.getAllNotes();
+      if (localNotes.length === 0) {
+        const starterNote: Note = {
+          id: 'note_guest_starter',
+          title: '🪶 Welcome to Chitralekh (चित्रलेख) — Interactive Demo Note',
+          content: `# 🪶 Welcome to Chitralekh (चित्रलेख)!
+
+> **The Modern Academic & Visual Note-Taking Environment**  
+> Blend structured Markdown with instant Mermaid.js flowcharts, LaTeX math, and Central Repository sharing.
+
+---
+
+### 🚀 What can you try right now in Guest Mode?
+
+- **Split Editor & Live Preview:** Click **Toggle Preview** (Eye icon) or press shortcuts to see real-time Markdown rendering.
+- **Visual Flowcharts:** Generate and visualize Mermaid diagrams directly within your notes:
+
+\`\`\`mermaid
+graph TD
+    A[📚 College Lecture / Textbook] --> B(🪶 Chitralekh Visual Notes)
+    B --> C{Review Stage}
+    C -->|Equations & Math| D[📐 LaTeX Formulas: e^(iπ) + 1 = 0]
+    C -->|Visual Concepts| E[📊 Mermaid Diagrams & Mindmaps]
+    D --> F[🏛️ Central Academic Repository]
+    E --> F
+    F --> G[🎓 Junior Batches Inherit & Update Heritage]
+\`\`\`
+
+- **LaTeX Mathematics:**
+$$\\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx = \\sqrt{\\pi}$$
+
+- **Checklists & Active Tasks:**
+- [x] Explore Markdown Editor
+- [x] Test Mermaid.js flowchart rendering
+- [ ] Create a free account to sync notes to Cloud & upload to Central Repository!
+
+---
+
+💡 *Ready to preserve your notes permanently? Click **"Sign In"** or **"Create Account"** in the top bar anytime!*`,
+          note_type: 'markdown',
+          is_pinned: true,
+          is_favorite: false,
+          is_archived: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          tags: [],
+          word_count: 140,
+          reading_time: 1,
+        };
+        await localStorageService.saveNote(starterNote);
+        localNotes = [starterNote];
+      }
+      setNotes(localNotes);
+      setPagination({
+        page: 1,
+        page_size: 20,
+        total: localNotes.length,
+        total_pages: 1,
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await notesApi.list(params);
       setNotes(response.data.items);
@@ -49,6 +114,30 @@ export function useNotes(initialParams?: SearchParams) {
   }, [fetchNotes]);
 
   const createNote = async (data: NoteCreate) => {
+    const isGuest = localStorage.getItem('is_guest_mode') === 'true';
+    if (isGuest) {
+      const newNote: Note = {
+        id: 'note_guest_' + Date.now(),
+        title: data.title || 'Untitled Note',
+        content: data.content || '',
+        note_type: data.note_type || 'markdown',
+        folder_id: data.folder_id,
+        is_pinned: false,
+        is_favorite: false,
+        is_archived: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        tags: [],
+        word_count: (data.content || '').split(/\s+/).filter(Boolean).length,
+        reading_time: Math.max(1, Math.round(((data.content || '').split(/\s+/).filter(Boolean).length) / 200)),
+      };
+      await localStorageService.saveNote(newNote);
+      setNotes(prev => [newNote, ...prev]);
+      pagination.total += 1;
+      toast.success('Note saved locally in Guest Mode');
+      return newNote;
+    }
+
     const response = await notesApi.create(data);
     setNotes(prev => [response.data, ...prev]);
     pagination.total += 1;
@@ -58,6 +147,25 @@ export function useNotes(initialParams?: SearchParams) {
   };
 
   const updateNote = async (id: string, data: NoteUpdate) => {
+    const isGuest = localStorage.getItem('is_guest_mode') === 'true';
+    if (isGuest) {
+      const existing = (await localStorageService.getNote(id)) || notes.find(n => n.id === id);
+      const updated: Note = {
+        ...(existing || {} as Note),
+        id,
+        title: data.title !== undefined ? data.title : existing?.title || 'Untitled',
+        content: data.content !== undefined ? data.content : existing?.content || '',
+        note_type: (data.note_type as any) || existing?.note_type || 'markdown',
+        folder_id: data.folder_id !== undefined ? data.folder_id : existing?.folder_id,
+        updated_at: new Date().toISOString(),
+        word_count: ((data.content !== undefined ? data.content : existing?.content) || '').split(/\s+/).filter(Boolean).length,
+        reading_time: Math.max(1, Math.round((((data.content !== undefined ? data.content : existing?.content) || '').split(/\s+/).filter(Boolean).length) / 200)),
+      };
+      await localStorageService.saveNote(updated);
+      setNotes(prev => prev.map(note => note.id === id ? updated : note));
+      return updated;
+    }
+
     const response = await notesApi.update(id, data);
     setNotes(prev => prev.map(note => note.id === id ? response.data : note));
     await localStorageService.saveNote(response.data);
@@ -65,6 +173,15 @@ export function useNotes(initialParams?: SearchParams) {
   };
 
   const deleteNote = async (id: string) => {
+    const isGuest = localStorage.getItem('is_guest_mode') === 'true';
+    if (isGuest) {
+      await localStorageService.deleteNote(id);
+      setNotes(prev => prev.filter(note => note.id !== id));
+      pagination.total = Math.max(0, pagination.total - 1);
+      toast.success('Note removed from local storage');
+      return;
+    }
+
     await notesApi.delete(id);
     setNotes(prev => prev.filter(note => note.id !== id));
     pagination.total -= 1;
@@ -191,11 +308,27 @@ export function useNote(id: string | null) {
       return;
     }
     setIsLoading(true);
+    const isGuest = localStorage.getItem('is_guest_mode') === 'true';
+    if (isGuest || id.startsWith('note_guest_')) {
+      const local = await localStorageService.getNote(id);
+      if (local) {
+        setNote(local);
+      } else {
+        setNote(null);
+      }
+      setIsLoading(false);
+      return;
+    }
     try {
       const response = await notesApi.get(id);
       setNote(response.data);
     } catch {
-      toast.error('Failed to load note');
+      const local = await localStorageService.getNote(id);
+      if (local) {
+        setNote(local);
+      } else {
+        toast.error('Failed to load note');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -243,6 +376,12 @@ export function useFolders() {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetch = useCallback(async () => {
+    if (localStorage.getItem('is_guest_mode') === 'true') {
+      setFolders([]);
+      setFlatFolders([]);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const [treeResponse, flatResponse] = await Promise.all([
@@ -333,6 +472,12 @@ export function useTags() {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetch = useCallback(async () => {
+    if (localStorage.getItem('is_guest_mode') === 'true') {
+      setTags([]);
+      setTagsWithCounts([]);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const [tagsResponse, countsResponse] = await Promise.allSettled([

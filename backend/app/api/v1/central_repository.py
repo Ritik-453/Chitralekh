@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_optional_user
 from app.models import (
     User,
     Note,
@@ -47,7 +47,7 @@ async def list_central_repo_items(
     page: int = Query(1, ge=1),
     page_size: int = Query(12, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     List and search academic notes in the Central Repository.
@@ -199,7 +199,7 @@ def save_custom_metadata(data: dict):
 @router.get("/meta", response_model=CentralRepoMetaResponse)
 async def get_central_repo_metadata(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Get distinct list of institutions, departments, courses, batches, and semesters present in the repository
@@ -334,7 +334,7 @@ async def get_central_repo_item(
     item_id: str,
     increment_view: bool = Query(True),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Get a single Central Repository document with its complete version history and updater lineage.
@@ -571,7 +571,7 @@ async def fork_repo_item_to_personal_notes(
 async def toggle_like_repo_item(
     item_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """Upvote / like a repository note."""
     result = await db.execute(
@@ -590,7 +590,7 @@ async def toggle_like_repo_item(
 async def register_download(
     item_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """Increment the download count for a note."""
     result = await db.execute(

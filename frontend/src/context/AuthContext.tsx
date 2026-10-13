@@ -8,6 +8,8 @@ interface AuthContextType {
   tokens: AuthTokens | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isGuest: boolean;
+  loginAsGuest: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, fullName?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -16,14 +18,35 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
+export const GUEST_USER: User = {
+  id: 'guest_user',
+  email: 'guest@chitralekh.local',
+  full_name: 'Guest Explorer',
+  is_active: true,
+  is_verified: true,
+  institution: 'Demo College / University',
+  department: 'Computer Science & Engineering',
+  batch: 'Batch 2024-2028',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    return localStorage.getItem('is_guest_mode') === 'true';
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
+    if (localStorage.getItem('is_guest_mode') === 'true') {
+      setUser(GUEST_USER);
+      setIsGuest(true);
+      return;
+    }
     try {
       const response = await authApi.getMe();
       setUser(response.data);
@@ -35,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
+      const isGuestMode = localStorage.getItem('is_guest_mode') === 'true';
       const storedTokens = localStorage.getItem('auth_tokens');
       if (storedTokens) {
         try {
@@ -44,15 +68,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (parsed.access_token) {
             const response = await authApi.getMe();
             setUser(response.data);
+            setIsGuest(false);
+            localStorage.removeItem('is_guest_mode');
           }
         } catch {
           localStorage.removeItem('auth_tokens');
+          if (isGuestMode) {
+            setUser(GUEST_USER);
+            setIsGuest(true);
+          }
         }
+      } else if (isGuestMode) {
+        setUser(GUEST_USER);
+        setIsGuest(true);
       }
       setIsLoading(false);
     };
     initAuth();
   }, []);
+
+  const loginAsGuest = () => {
+    localStorage.removeItem('auth_tokens');
+    setAccessToken(null);
+    localStorage.setItem('is_guest_mode', 'true');
+    setUser(GUEST_USER);
+    setIsGuest(true);
+    toast.success('Browsing as Guest! Try out notes & diagrams freely 🚀');
+  };
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });
@@ -60,6 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const newTokens = { access_token, refresh_token, token_type: 'bearer' };
     setTokens(newTokens);
     localStorage.setItem('auth_tokens', JSON.stringify(newTokens));
+    localStorage.removeItem('is_guest_mode');
+    setIsGuest(false);
     setAccessToken(access_token);
     const userResponse = await authApi.getMe();
     setUser(userResponse.data);
@@ -71,6 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authApi.register({ email, password, full_name: fullName });
     localStorage.setItem('notes_is_first_time_signup', 'true');
     localStorage.removeItem('notes_tour_completed');
+    localStorage.removeItem('is_guest_mode');
+    setIsGuest(false);
     try {
       await login(email, password);
       toast.success('Account created and signed in!');
@@ -80,25 +126,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // Ignore logout errors
+    if (!isGuest) {
+      try {
+        await authApi.logout();
+      } catch {
+        // Ignore logout errors
+      }
     }
     setUser(null);
     setTokens(null);
+    setIsGuest(false);
     localStorage.removeItem('auth_tokens');
+    localStorage.removeItem('is_guest_mode');
     setAccessToken(null);
-    toast.success('Logged out successfully');
+    toast.success('Signed out successfully');
   };
 
   const updateUser = async (data: Partial<User>) => {
+    if (isGuest) {
+      setUser(prev => prev ? { ...prev, ...data } : GUEST_USER);
+      toast.success('Guest profile updated locally');
+      return;
+    }
     const response = await authApi.updateMe(data);
     setUser(response.data);
     toast.success('Profile updated');
   };
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
+    if (isGuest) {
+      toast.error('Password change is unavailable in Guest Mode. Please create an account.');
+      return;
+    }
     await authApi.changePassword({ current_password: currentPassword, new_password: newPassword });
     toast.success('Password changed');
   };
@@ -109,7 +168,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         tokens,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && !isGuest,
+        isGuest,
+        loginAsGuest,
         login,
         register,
         logout,

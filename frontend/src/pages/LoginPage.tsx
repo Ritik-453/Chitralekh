@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Github, Globe } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Github, Globe, Sparkles } from 'lucide-react';
 import { cn } from '../utils';
 import { API_URL, setAccessToken } from '../services/api';
 import toast from 'react-hot-toast';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginAsGuest } = useAuth();
   const { resolvedTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,19 +65,50 @@ export function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-secondary-50 dark:bg-secondary-900 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-primary-600/30">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-2xl font-bold text-secondary-900 dark:text-white">Notes</span>
+            <div className="flex flex-col text-left">
+              <span className="text-2xl font-black bg-gradient-to-r from-primary-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Chitralekh</span>
+              <span className="text-[10px] -mt-1 font-semibold text-secondary-400 dark:text-secondary-500 tracking-wider">चित्रलेख • Visual Notes</span>
+            </div>
           </Link>
-          <h1 className="text-3xl font-bold text-secondary-900 dark:text-white">Welcome back</h1>
-          <p className="mt-2 text-secondary-600 dark:text-secondary-400">Sign in to your account to continue</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-secondary-900 dark:text-white">Welcome back</h1>
+          <p className="mt-1.5 text-xs sm:text-sm text-secondary-600 dark:text-secondary-400">Sign in to sync your personal notes & flowcharts</p>
         </div>
 
-        <div className="card p-6 sm:p-8">
+        <div className="card p-6 sm:p-8 space-y-6">
+          {/* Continue as Guest Button */}
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                loginAsGuest();
+                navigate('/');
+              }}
+              className="w-full py-3 px-4 rounded-xl border-2 border-indigo-500/40 hover:border-indigo-500 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 text-indigo-700 dark:text-indigo-300 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-sm transform hover:scale-[1.01]"
+            >
+              <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+              <span>Continue as Guest (Try app instantly) 🚀</span>
+            </button>
+            <p className="text-[11px] text-center text-secondary-500 dark:text-secondary-400 mt-1.5">
+              No registration needed to test Markdown, Mermaid charts & offline notes!
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-secondary-200 dark:border-secondary-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="px-3 bg-white dark:bg-secondary-800 text-secondary-500 font-semibold tracking-wider">
+                Or Sign In With Account
+              </span>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="label">Email</label>

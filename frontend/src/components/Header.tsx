@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, isGuest, logout } = useAuth();
   const { theme, resolvedTheme, toggleTheme, setTheme } = useTheme();
   const { isCompleted: isTourCompleted } = useTourStatus();
   const navigate = useNavigate();
@@ -181,6 +181,23 @@ export function Header({ onMenuClick }: HeaderProps) {
               {resolvedTheme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
+            {isGuest && (
+              <div className="hidden sm:flex items-center gap-1.5">
+                <Link
+                  to="/login"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-secondary-300 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary-600 text-white hover:bg-primary-500 transition shadow-xs"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
@@ -191,21 +208,52 @@ export function Header({ onMenuClick }: HeaderProps) {
                 {user?.avatar_url ? (
                   <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full" />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                    <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-                      {user?.full_name?.charAt(0).toUpperCase() || user?.email.charAt(0).toUpperCase()}
-                    </span>
+                  <div className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs',
+                    isGuest
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-400/50'
+                      : 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                  )}>
+                    {isGuest ? '👀' : (user?.full_name?.charAt(0).toUpperCase() || user?.email.charAt(0).toUpperCase())}
                   </div>
                 )}
                 <ChevronDown className="w-4 h-4 text-secondary-500 hidden sm:block" />
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-secondary-800 rounded-lg shadow-lg border border-secondary-200 dark:border-secondary-700 animate-fade-in z-50">
-                  <div className="p-3 border-b border-secondary-200 dark:border-secondary-700">
-                    <p className="font-medium text-secondary-900 dark:text-white truncate">{user?.full_name || 'User'}</p>
-                    <p className="text-sm text-secondary-500 truncate">{user?.email}</p>
-                  </div>
+                <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-secondary-800 rounded-2xl shadow-xl border border-secondary-200 dark:border-secondary-700 animate-fade-in z-50 overflow-hidden">
+                  {isGuest ? (
+                    <div className="p-3.5 border-b border-secondary-200 dark:border-secondary-700 bg-amber-500/10">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-amber-800 dark:text-amber-300">Guest Mode</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-400/20 text-amber-700 dark:text-amber-300 font-semibold">Demo</span>
+                      </div>
+                      <p className="text-[11px] text-secondary-600 dark:text-secondary-400 mt-1">
+                        Notes are stored in browser memory.
+                      </p>
+                      <div className="mt-3 flex items-center gap-2">
+                        <Link
+                          to="/register"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex-1 py-1.5 px-2 text-center rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs shadow-xs transition"
+                        >
+                          Sign Up
+                        </Link>
+                        <Link
+                          to="/login"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex-1 py-1.5 px-2 text-center rounded-xl border border-secondary-300 dark:border-secondary-700 hover:bg-secondary-100 dark:hover:bg-secondary-700 text-secondary-800 dark:text-secondary-200 font-medium text-xs transition"
+                        >
+                          Sign In
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 border-b border-secondary-200 dark:border-secondary-700">
+                      <p className="font-medium text-secondary-900 dark:text-white truncate">{user?.full_name || 'User'}</p>
+                      <p className="text-sm text-secondary-500 truncate">{user?.email}</p>
+                    </div>
+                  )}
                   {!isTourCompleted && (
                     <button
                       onClick={() => {
@@ -234,38 +282,38 @@ export function Header({ onMenuClick }: HeaderProps) {
                     <Settings className="w-4 h-4" />
                     Settings
                   </NavLink>
-                <hr className="my-1 border-secondary-200 dark:border-secondary-700" />
-                <div className="px-2 py-1 space-y-1">
-                  <p className="px-3 py-1 text-xs font-medium text-secondary-500 uppercase">Theme</p>
-                  {(['light', 'dark', 'system'] as const).map(t => (
-                    <button
-                      key={t}
-                      onClick={() => handleThemeChange(t)}
-                      className={cn(
-                        'w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors',
-                        theme === t
-                          ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-                          : 'text-secondary-700 hover:bg-secondary-100 dark:text-secondary-300 dark:hover:bg-secondary-700'
-                      )}
-                    >
-                      {t === 'light' && <Sun className="w-4 h-4" />}
-                      {t === 'dark' && <Moon className="w-4 h-4" />}
-                      {t === 'system' && <Monitor className="w-4 h-4" />}
-                      <span className="capitalize">{t}</span>
-                      {theme === t && <span className="ml-auto text-primary-600">✓</span>}
-                    </button>
-                  ))}
+                  <hr className="my-1 border-secondary-200 dark:border-secondary-700" />
+                  <div className="px-2 py-1 space-y-1">
+                    <p className="px-3 py-1 text-xs font-medium text-secondary-500 uppercase">Theme</p>
+                    {(['light', 'dark', 'system'] as const).map(t => (
+                      <button
+                        key={t}
+                        onClick={() => handleThemeChange(t)}
+                        className={cn(
+                          'w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors',
+                          theme === t
+                            ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+                            : 'text-secondary-700 hover:bg-secondary-100 dark:text-secondary-300 dark:hover:bg-secondary-700'
+                        )}
+                      >
+                        {t === 'light' && <Sun className="w-4 h-4" />}
+                        {t === 'dark' && <Moon className="w-4 h-4" />}
+                        {t === 'system' && <Monitor className="w-4 h-4" />}
+                        <span className="capitalize">{t}</span>
+                        {theme === t && <span className="ml-auto text-primary-600">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                  <hr className="my-1 border-secondary-200 dark:border-secondary-700" />
+                  <button
+                    onClick={logout}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    {isGuest ? 'Exit Guest Mode' : 'Logout'}
+                  </button>
                 </div>
-                <hr className="my-1 border-secondary-200 dark:border-secondary-700" />
-                <button
-                  onClick={logout}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
-              </div>
-            )}
+              )}
             </div>
           </div>
         </div>

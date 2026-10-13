@@ -19,11 +19,12 @@ import { ArchivedNotesPage } from './pages/ArchivedNotesPage';
 import { FlowchartEditorPage } from './pages/FlowchartEditorPage';
 import { CentralRepositoryPage } from './pages/CentralRepositoryPage';
 import { NewbieStickyNotesGuide } from './components/NewbieStickyNotesGuide';
+import { GuestBanner } from './components/GuestBanner';
 import { useTourStatus } from './hooks/useTourStatus';
 import { cn } from './utils';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -33,7 +34,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return (isAuthenticated || isGuest) ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -64,6 +65,7 @@ function AppLayout() {
         isCollapsed={sidebarCollapsed}
       />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <GuestBanner />
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative flex flex-col">
           <Outlet />

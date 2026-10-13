@@ -38,6 +38,7 @@ import { centralRepoApi, notesApi } from '../services/api';
 import { localStorageService } from '../services/localStorageService';
 import { useAuth } from '../context/AuthContext';
 import { useNotes } from '../hooks/useNotes';
+import { GuestAuthModal } from '../components/GuestAuthModal';
 import { cn, formatRelativeTime } from '../utils';
 import { compressImageToWebP } from '../utils/compression';
 import type { CentralRepoItem, CentralRepoVersion, CentralRepoMeta, Note } from '../types';
@@ -45,7 +46,7 @@ import toast from 'react-hot-toast';
 
 export const CentralRepositoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { notes } = useNotes();
 
   // Data states
@@ -101,7 +102,34 @@ export const CentralRepositoryPage: React.FC = () => {
   const [customMetaInput, setCustomMetaInput] = useState('');
   const [isSavingMeta, setIsSavingMeta] = useState(false);
 
+  // Guest Auth Intercept Modal state
+  const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
+  const [guestModalContext, setGuestModalContext] = useState({
+    title: 'Sign In to Publish Notes',
+    description: 'You are currently in Guest Mode. Please sign in or create an account to publish notes to the Central Academic Repository.',
+  });
+
+  const handleOpenUploadModal = () => {
+    if (isGuest) {
+      setGuestModalContext({
+        title: 'Sign In to Publish Notes',
+        description: 'You are exploring in Guest Mode. To upload and share notes with your university batch in the Central Repository, please create an account or sign in.',
+      });
+      setShowGuestAuthModal(true);
+      return;
+    }
+    setShowUploadModal(true);
+  };
+
   const handleOpenAddMeta = (category: 'institution' | 'department' | 'batch' | 'semester') => {
+    if (isGuest) {
+      setGuestModalContext({
+        title: 'Sign In to Add Academic Metadata',
+        description: 'Please sign in or create an account to register a new institution, department, or batch in the repository.',
+      });
+      setShowGuestAuthModal(true);
+      return;
+    }
     const titles = {
       institution: 'Add New College / Institution',
       department: 'Add New Department / Faculty',
@@ -234,6 +262,14 @@ export const CentralRepositoryPage: React.FC = () => {
   // Fork item to personal notes
   const handleFork = async (e: React.MouseEvent, item: CentralRepoItem) => {
     e.stopPropagation();
+    if (isGuest) {
+      setGuestModalContext({
+        title: 'Sign In to Fork Note',
+        description: 'To clone and save this repository document into your personal notebook and cloud sync, please sign in or create an account.',
+      });
+      setShowGuestAuthModal(true);
+      return;
+    }
     const toastId = toast.loading('Forking to your personal notes...');
     try {
       const res = await centralRepoApi.fork(item.id);
@@ -406,6 +442,14 @@ export const CentralRepositoryPage: React.FC = () => {
 
   // Open Version update modal
   const handleOpenVersionModal = (item: CentralRepoItem) => {
+    if (isGuest) {
+      setGuestModalContext({
+        title: 'Sign In to Contribute Updates',
+        description: 'To record next-batch edits, formulas, or corrections to this repository document, please sign in or create an account.',
+      });
+      setShowGuestAuthModal(true);
+      return;
+    }
     setActiveItem(item);
     setVersionUpdaterName(user?.full_name || user?.email?.split('@')[0] || '');
     setVersionUpdaterBatch(user?.batch || 'Next Batch');
@@ -485,7 +529,7 @@ export const CentralRepositoryPage: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setShowUploadModal(true)}
+              onClick={handleOpenUploadModal}
               className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/30"
             >
               <Upload className="w-4 h-4" />
@@ -730,7 +774,7 @@ export const CentralRepositoryPage: React.FC = () => {
               Be the first from your university or batch to upload notes for this course so future batches can learn from them!
             </p>
             <button
-              onClick={() => setShowUploadModal(true)}
+              onClick={handleOpenUploadModal}
               className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-indigo-600/20"
             >
               Upload First Note
@@ -1577,6 +1621,14 @@ export const CentralRepositoryPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Guest Auth Required Modal */}
+      <GuestAuthModal
+        isOpen={showGuestAuthModal}
+        onClose={() => setShowGuestAuthModal(false)}
+        title={guestModalContext.title}
+        description={guestModalContext.description}
+      />
     </div>
   );
 };

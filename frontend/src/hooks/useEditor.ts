@@ -103,6 +103,53 @@ export function useEditor({
     
     setIsSaving(true);
     try {
+      const isGuest = localStorage.getItem('is_guest_mode') === 'true';
+      if (isGuest) {
+        let savedNote: Note;
+        const now = new Date().toISOString();
+        if (note) {
+          savedNote = {
+            ...note,
+            title: title || 'Untitled',
+            content,
+            note_type: (noteType || 'markdown') as any,
+            folder_id: folderId || undefined,
+            updated_at: now,
+            word_count: wordCount,
+            reading_time: readingTime,
+          };
+        } else {
+          savedNote = {
+            id: 'note_guest_' + Date.now(),
+            title: title.trim() || 'Untitled Note',
+            content,
+            note_type: (noteType || 'markdown') as any,
+            folder_id: folderId || undefined,
+            is_pinned: false,
+            is_favorite: false,
+            is_archived: false,
+            created_at: now,
+            updated_at: now,
+            tags: [],
+            word_count: wordCount,
+            reading_time: readingTime,
+          };
+        }
+        await localStorageService.saveNote(savedNote);
+        previousContentRef.current = content;
+        previousTitleRef.current = title;
+        previousFolderIdRef.current = folderId || null;
+        previousTagsRef.current = [...tags].sort();
+        previousNoteTypeRef.current = noteType || 'markdown';
+        setIsDirty(false);
+        setLastSaved(new Date());
+        if (force) {
+          toast.success('Note saved locally (Guest Mode) 💾');
+        }
+        onSave?.(savedNote);
+        return savedNote;
+      }
+
       let savedNote: Note;
       if (note) {
         const updateData: NoteUpdate = {

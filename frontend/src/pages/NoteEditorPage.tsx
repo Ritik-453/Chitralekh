@@ -73,6 +73,8 @@ import {
 import { cn, extractTableOfContent, formatRelativeTime } from '../utils';
 import type { Note, NoteType, Tag } from '../types';
 import { notesApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { GuestAuthModal } from '../components/GuestAuthModal';
 import { FileImportModal } from '../components/FileImportModal';
 import { useTourStatus } from '../hooks/useTourStatus';
 import { compressImageToWebP } from '../utils/compression';
@@ -165,6 +167,7 @@ const NOTE_TEMPLATES = [
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
   const isNew = id === 'new';
   const { note, isLoading: noteLoading, refetch } = useNote(id || null);
   const { folders } = useFolders();
@@ -182,6 +185,13 @@ export function NoteEditorPage() {
   const [showNoteMenu, setShowNoteMenu] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // Guest Auth Intercept Modal
+  const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
+  const [guestModalContext, setGuestModalContext] = useState({
+    title: 'Sign In to Save to Cloud',
+    description: 'Your note is saved locally in this browser. To save permanently to your account, sync across devices, and share to the Central Repository, please sign in or register.',
+  });
 
   // New Modals & Drawers
   const [showTableModal, setShowTableModal] = useState(false);
@@ -262,7 +272,28 @@ export function NoteEditorPage() {
     syncToCloud,
   });
 
+  const handleSaveClick = async () => {
+    if (isGuest) {
+      await save(false);
+      setGuestModalContext({
+        title: 'Sign In to Save & Sync to Cloud',
+        description: 'Your note has been saved locally in your browser so you won\'t lose your work! To save permanently to your cloud account and access from any device, please sign in or create an account.',
+      });
+      setShowGuestAuthModal(true);
+      return;
+    }
+    save(true);
+  };
+
   const handleToggleCloudSync = async () => {
+    if (isGuest) {
+      setGuestModalContext({
+        title: 'Cloud Sync Requires Account',
+        description: 'You are currently in Guest Mode. Cloud backups and central account sync require an account. Please sign in or register.',
+      });
+      setShowGuestAuthModal(true);
+      return;
+    }
     const nextVal = !syncToCloud;
     setSyncToCloud(nextVal);
     if (!isNew && note) {
@@ -837,7 +868,7 @@ export function NoteEditorPage() {
                 <span className={cn('w-1.5 h-1.5 rounded-full', autoSaveEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-secondary-400')} />
                 <span>Autosave: {autoSaveEnabled ? 'ON' : 'OFF'}</span>
               </button>
-              <button onClick={() => save(true)} disabled={isSaving} className="btn-primary py-1 px-2.5 sm:px-3 text-xs sm:text-sm flex items-center gap-1.5 shrink-0 font-medium">
+              <button onClick={handleSaveClick} disabled={isSaving} className="btn-primary py-1 px-2.5 sm:px-3 text-xs sm:text-sm flex items-center gap-1.5 shrink-0 font-medium">
                 <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{isSaving ? 'Saving...' : isDirty ? 'Save' : 'Saved'}</span>
               </button>
@@ -1015,7 +1046,7 @@ export function NoteEditorPage() {
             </button>
 
             <button
-              onClick={() => save(true)}
+              onClick={handleSaveClick}
               disabled={isSaving}
               className="btn-primary py-1 px-2.5 sm:px-3 text-xs sm:text-sm flex items-center gap-1.5 shrink-0 font-medium"
             >
@@ -1881,6 +1912,15 @@ export function NoteEditorPage() {
         accept="image/*"
         className="hidden"
         onChange={handleImageFileSelect}
+      />
+
+      {/* Guest Auth Required Modal */}
+      <GuestAuthModal
+        isOpen={showGuestAuthModal}
+        onClose={() => setShowGuestAuthModal(false)}
+        title={guestModalContext.title}
+        description={guestModalContext.description}
+        onDownloadLocal={handleExport}
       />
     </div>
   );

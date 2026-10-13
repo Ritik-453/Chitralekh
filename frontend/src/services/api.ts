@@ -64,7 +64,8 @@ api.interceptors.response.use(
       } catch (refreshError) {
         setAccessToken(null);
         localStorage.removeItem('auth_tokens');
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        const isGuest = localStorage.getItem('is_guest_mode') === 'true';
+        if (!isGuest && typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
