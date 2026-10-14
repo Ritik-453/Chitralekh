@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { cn } from '../utils';
 import {
   parseFlowchartNodes,
   updateNodeLabel,
@@ -17,6 +19,7 @@ import {
   GitBranch,
   Trash2,
   Maximize2,
+  Minimize2,
   ZoomIn,
   ZoomOut,
   RotateCcw,
@@ -129,6 +132,7 @@ export function FlowchartCanvas({
 
     const container = contentWrapperRef.current;
     const nodeElements = container.querySelectorAll('g.node');
+    const cleanups: (() => void)[] = [];
 
     nodeElements.forEach((nodeEl) => {
       // Mermaid IDs look like "flowchart-node1-42" or "node1"
@@ -196,11 +200,15 @@ export function FlowchartCanvas({
       nodeEl.addEventListener('click', handleClick);
       nodeEl.addEventListener('dblclick', handleDblClick);
 
-      return () => {
+      cleanups.push(() => {
         nodeEl.removeEventListener('click', handleClick);
         nodeEl.removeEventListener('dblclick', handleDblClick);
-      };
+      });
     });
+
+    return () => {
+      cleanups.forEach((fn) => fn());
+    };
   }, [svg, selectedNodeId, isConnectingMode, connectSourceNodeId, code, positionPopoverForElement, applyCodeUpdate]);
 
   // Click outside canvas clears selection
@@ -328,10 +336,7 @@ export function FlowchartCanvas({
     let unscaledH = 0;
 
     // Check viewBox first for true coordinate width/height
-    if (svgEl.viewBox && svgEl.viewBox.baseVal && svgEl.viewBox.baseVal.width > 0) {
-      unscaledW = svgEl.viewBox.baseVal.width;
-      unscaledH = svgEl.viewBox.baseVal.height;
-    } else {
+    try {
       const vb = svgEl.getAttribute('viewBox');
       if (vb) {
         const parts = vb.trim().split(/[\s,]+/).map(Number);
@@ -340,6 +345,8 @@ export function FlowchartCanvas({
           unscaledH = parts[3];
         }
       }
+    } catch {
+      // ignore
     }
 
     if (!unscaledW || !unscaledH) {
@@ -351,7 +358,12 @@ export function FlowchartCanvas({
     if (unscaledW > 0 && unscaledH > 0 && containerRect.width > 0 && containerRect.height > 0) {
       const scaleX = (containerRect.width * 0.90) / unscaledW;
       const scaleY = (containerRect.height * 0.88) / unscaledH;
-      const optimal = Math.min(Math.max(Math.min(scaleX, scaleY), 0.25), 2.5);
+      let optimal = Math.min(scaleX, scaleY);
+      if (isNaN(optimal) || !isFinite(optimal) || optimal <= 0) {
+        optimal = 1;
+      } else {
+        optimal = Math.min(Math.max(optimal, 0.25), 2.5);
+      }
       setZoom(Number(optimal.toFixed(2)));
     } else {
       setZoom(1);
@@ -368,32 +380,25 @@ export function FlowchartCanvas({
   }, [svg, fitView]);
 
   const toggleFullscreen = useCallback(() => {
-    setIsFullscreen((prev) => {
-      const next = !prev;
-      setTimeout(() => fitView(), 120);
-      return next;
-    });
+    setIsFullscreen((prev) => !prev);
+    setTimeout(() => fitView(), 120);
   }, [fitView]);
 
-  // Keyboard shortcut listener: F to toggle fullscreen, Esc to exit
+  // Keyboard shortcut listener: ONLY listen for Esc when in fullscreen mode (DO NOT hijack the F key!)
   useEffect(() => {
+    if (!isFullscreen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        return;
-      }
-      if (e.key === 'f' || e.key === 'F') {
+      if (e.key === 'Escape') {
         e.preventDefault();
-        toggleFullscreen();
-      }
-      if (e.key === 'Escape' && isFullscreen) {
         setIsFullscreen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, toggleFullscreen]);
+  }, [isFullscreen]);
 
-  return (
+  const canvasElement = (
     <div
       ref={containerRef}
       onClick={handleCanvasClick}
@@ -401,9 +406,11 @@ export function FlowchartCanvas({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className={`relative w-full h-full flex flex-col overflow-hidden select-none bg-secondary-950 transition-all ${
-        isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen' : ''
-      } ${className}`}
+      className={cn(
+        'w-full h-full flex flex-col overflow-hidden select-none bg-secondary-950 transition-all',
+        isFullscreen ? 'fixed inset-0 z-[9999] w-screen h-screen' : 'relative',
+        className
+      )}
     >
       {/* Top Floating Visual Builder Toolbar (flowchart.fun inspiration) */}
       <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-none">
@@ -524,7 +531,7 @@ export function FlowchartCanvas({
                 ? 'bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold'
                 : 'bg-primary-600 hover:bg-primary-500 text-white'
             }`}
-            title={isFullscreen ? 'Exit Fullscreen (Esc or F)' : 'Expand Canvas to Fullscreen (F)'}
+            title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Expand Canvas to Fullscreen'}
           >
             {isFullscreen ? (
               <>
@@ -538,6 +545,17 @@ export function FlowchartCanvas({
               </>
             )}
           </button>
+
+          {isFullscreen && (
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(false)}
+              className="p-1.5 rounded-lg bg-red-600/80 hover:bg-red-500 text-white transition-all active:scale-95 ml-0.5"
+              title="Close Fullscreen (Esc)"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -745,8 +763,10 @@ export function FlowchartCanvas({
       {/* Bottom Hint */}
       <div className="absolute bottom-3 left-4 text-[11px] text-secondary-400 pointer-events-none flex items-center gap-2 bg-secondary-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-secondary-800 shadow-md">
         <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span>Click node to edit • Double-click to rename • Press <strong>F</strong> for Fullscreen • Drag to Pan</span>
+        <span>Click node to edit • Double-click to rename • Pan by dragging • {isFullscreen ? 'Press Esc to exit' : 'Click Fullscreen for workspace'}</span>
       </div>
     </div>
   );
+
+  return isFullscreen ? createPortal(canvasElement, document.body) : canvasElement;
 }

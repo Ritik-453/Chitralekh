@@ -841,8 +841,8 @@ export function NoteEditorPage() {
     );
   }
 
-  // Flowchart View
-  if (noteType === 'flowchart') {
+  // Flowchart & Diagram View
+  if (noteType === 'flowchart' || noteType === 'diagram') {
     return (
       <div className={cn('h-full w-full flex-1 min-h-0 flex flex-col overflow-hidden', isFullscreen && 'fixed inset-0 z-50 bg-white dark:bg-secondary-900')}>
         <div className="shrink-0 z-20 bg-white/90 dark:bg-secondary-900/90 backdrop-blur-sm border-b border-secondary-200 dark:border-secondary-700">
@@ -856,9 +856,11 @@ export function NoteEditorPage() {
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 className="bg-transparent border-none text-base sm:text-lg font-semibold text-secondary-900 dark:text-white min-w-[120px] max-w-xs sm:max-w-md focus:outline-none placeholder:text-secondary-400 truncate"
-                placeholder="Untitled flowchart"
+                placeholder={noteType === 'flowchart' ? 'Untitled flowchart' : 'Untitled diagram'}
               />
-              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded shrink-0">Flowchart</span>
+              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded shrink-0">
+                {noteType === 'flowchart' ? 'Flowchart' : 'Diagram'}
+              </span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <button
