@@ -172,7 +172,7 @@ export function NoteEditorPage() {
   const { note, isLoading: noteLoading, refetch } = useNote(id || null);
   const { folders } = useFolders();
   const { tags, createTag } = useTags();
-  const { svg: flowchartSvg, render: renderFlowchart } = useFlowchart();
+  const { svg: flowchartSvg, error: flowchartError, isRendering: isFlowchartRendering, render: renderFlowchart } = useFlowchart();
 
   const [noteType, setNoteType] = useState<NoteType>('markdown');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
@@ -878,9 +878,19 @@ export function NoteEditorPage() {
             </div>
           </div>
           <div className="border-t border-secondary-200/80 dark:border-secondary-700/80 px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto scrollbar-thin bg-secondary-50/70 dark:bg-secondary-800/40">
-            <button onClick={() => renderFlowchart(content)} className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1 shrink-0" disabled={false}>
-              <RotateCcw className="w-3.5 h-3.5" />
-              Render
+            <button
+              onClick={() => {
+                if (!content.trim()) {
+                  toast.error('Please enter Mermaid diagram code to render');
+                  return;
+                }
+                renderFlowchart(content);
+              }}
+              className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1 shrink-0"
+              disabled={isFlowchartRendering}
+            >
+              <RotateCcw className={cn("w-3.5 h-3.5", isFlowchartRendering && "animate-spin")} />
+              {isFlowchartRendering ? 'Rendering...' : 'Render'}
             </button>
             <button onClick={() => handleExport()} className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1 shrink-0" disabled={!flowchartSvg}>
               <Download className="w-3.5 h-3.5" />
@@ -906,11 +916,50 @@ export function NoteEditorPage() {
             />
           </div>
           <div className="w-1/2 overflow-y-auto p-4 bg-white dark:bg-secondary-900">
-            {flowchartSvg ? (
-              <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: flowchartSvg }} />
+            {flowchartError ? (
+              <div className="h-full flex flex-col justify-center items-center p-4">
+                <div className="w-full max-w-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-2xl p-5 text-left shadow-sm">
+                  <div className="flex items-center gap-2.5 text-red-700 dark:text-red-300 font-bold mb-2 text-sm">
+                    <div className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">
+                      <AlertCircle className="w-4 h-4" />
+                    </div>
+                    <span>Mermaid Syntax Error</span>
+                  </div>
+                  <pre className="text-xs text-red-700 dark:text-red-300 font-mono bg-white/80 dark:bg-secondary-900/80 p-3 rounded-lg border border-red-200 dark:border-red-900/40 whitespace-pre-wrap break-words leading-relaxed mb-4">
+                    {flowchartError}
+                  </pre>
+                  <div className="text-xs text-secondary-600 dark:text-secondary-400 space-y-2">
+                    <p className="font-semibold text-secondary-800 dark:text-secondary-200">💡 Quick Fix:</p>
+                    <p>Flowcharts require a diagram header on the first line (e.g. <code>flowchart TD</code> or <code>graph TD</code>).</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const lines = content.trim().split('\n').filter(Boolean);
+                        let sample = '';
+                        if (lines.length >= 2) {
+                          sample = `flowchart TD\n` + lines.map((l, i) => `    node${i + 1}["${l.trim()}"]`).join(' --> ');
+                        } else {
+                          sample = `flowchart TD\n    A[Start] --> B[${content.trim() || 'Process'}]\n    B --> C[End]`;
+                        }
+                        setContent(sample);
+                        setIsDirty(true);
+                        renderFlowchart(sample);
+                      }}
+                      className="btn-primary py-1.5 px-3 text-xs w-full justify-center flex items-center gap-1.5 mt-2"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Convert to Flowchart Diagram</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : flowchartSvg ? (
+              <div className="w-full h-full flex items-center justify-center overflow-auto" dangerouslySetInnerHTML={{ __html: flowchartSvg }} />
             ) : (
-              <div className="flex items-center justify-center h-full text-secondary-500">
-                <p>Click "Render" to preview the flowchart</p>
+              <div className="flex flex-col items-center justify-center h-full text-secondary-500 gap-2">
+                <RotateCcw className="w-8 h-8 opacity-30 text-secondary-400" />
+                <p className="font-medium text-sm">Click "Render" to preview the flowchart</p>
+                <p className="text-xs text-secondary-400">Requires valid syntax like <code>flowchart TD; A--&gt;B</code></p>
               </div>
             )}
           </div>

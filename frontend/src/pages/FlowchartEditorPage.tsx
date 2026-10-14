@@ -11,7 +11,7 @@ export function FlowchartEditorPage() {
   const navigate = useNavigate();
   const isNew = id === 'new';
   const { note, isLoading: noteLoading, refetch } = useNote(id || null);
-  const { svg: flowchartSvg, render: renderFlowchart, validate, exportFlowchart } = useFlowchart();
+  const { svg: flowchartSvg, error: flowchartError, isRendering: isFlowchartRendering, render: renderFlowchart, validate, exportFlowchart } = useFlowchart();
   const { templates, themes, isLoading: templatesLoading } = useFlowchartTemplates();
 
   const [content, setContent] = useState('');
@@ -205,8 +205,23 @@ export function FlowchartEditorPage() {
               </div>
             </div>
             <div className="flex-1 p-4 overflow-auto" style={{ backgroundColor: selectedTheme === 'dark' ? '#1e1e1e' : 'white' }}>
-              {flowchartSvg ? (
-                <div className="w-full" dangerouslySetInnerHTML={{ __html: flowchartSvg }} />
+              {flowchartError ? (
+                <div className="h-full flex items-center justify-center p-4">
+                  <div className="max-w-md w-full bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl p-4 text-left shadow-sm">
+                    <div className="flex items-center gap-2 text-red-700 dark:text-red-300 font-bold mb-2 text-sm">
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                      <span>Mermaid Syntax Error</span>
+                    </div>
+                    <pre className="text-xs font-mono text-red-600 dark:text-red-300 bg-white/70 dark:bg-secondary-900/70 p-2.5 rounded border border-red-200 dark:border-red-900/40 whitespace-pre-wrap break-words leading-relaxed mb-3">
+                      {flowchartError}
+                    </pre>
+                    <p className="text-[11px] text-secondary-500 dark:text-secondary-400">
+                      💡 Tip: Use a starter like <code>flowchart TD</code>, <code>sequenceDiagram</code>, or select from the Templates menu above.
+                    </p>
+                  </div>
+                </div>
+              ) : flowchartSvg ? (
+                <div className="w-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: flowchartSvg }} />
               ) : (
                 <div className="flex items-center justify-center h-full text-secondary-500">
                   <div className="text-center">

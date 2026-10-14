@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from app.core.database import get_db
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, get_optional_user
 from app.models import Note, NoteType
 from app.schemas import FlowchartData, FlowchartExport
 
@@ -25,7 +25,7 @@ class FlowchartValidateResponse(BaseModel):
 @router.post("/validate", response_model=FlowchartValidateResponse)
 async def validate_flowchart(
     request: FlowchartValidateRequest,
-    current_user = Depends(get_current_active_user),
+    current_user = Depends(get_optional_user),
 ):
     try:
         import mermaid
@@ -45,7 +45,7 @@ async def validate_flowchart(
 @router.post("/render")
 async def render_flowchart(
     data: FlowchartData,
-    current_user = Depends(get_current_active_user),
+    current_user = Depends(get_optional_user),
 ):
     try:
         import mermaid
