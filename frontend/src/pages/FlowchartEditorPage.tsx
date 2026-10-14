@@ -5,6 +5,7 @@ import { notesApi } from '../services/api';
 import { Save, RotateCcw, Download, Copy, Maximize2, Minimize2, ChevronLeft, Menu, X, Plus, Trash2, Settings, Code, Type, GitBranch, Eye, EyeOff, ExternalLink, Share2, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '../utils';
 import { autoQuoteMermaidLabels } from '../utils/mermaid';
+import { FlowchartCanvas } from '../components/FlowchartCanvas';
 import toast from 'react-hot-toast';
 
 export function FlowchartEditorPage() {
@@ -237,7 +238,17 @@ export function FlowchartEditorPage() {
                   </div>
                 </div>
               ) : flowchartSvg ? (
-                <div className="w-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: flowchartSvg }} />
+                <FlowchartCanvas
+                  svg={flowchartSvg}
+                  code={content}
+                  onChangeCode={(newCode) => {
+                    setContent(newCode);
+                  }}
+                  onRender={(codeToRender) => {
+                    renderFlowchart(codeToRender || content, selectedTheme, direction);
+                  }}
+                  isRendering={isFlowchartRendering}
+                />
               ) : (
                 <div className="flex items-center justify-center h-full text-secondary-500">
                   <div className="text-center">

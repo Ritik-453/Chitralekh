@@ -79,7 +79,9 @@ import { FileImportModal } from '../components/FileImportModal';
 import { useTourStatus } from '../hooks/useTourStatus';
 import { compressImageToWebP } from '../utils/compression';
 import { MermaidDiagram } from '../components/MermaidDiagram';
+import { FlowchartCanvas } from '../components/FlowchartCanvas';
 import { autoQuoteMermaidLabels } from '../utils/mermaid';
+import { flowchartToOutline, outlineToFlowchart } from '../utils/flowchartParser';
 import toast from 'react-hot-toast';
 
 const TOOLBAR_BUTTONS = [
@@ -180,6 +182,8 @@ export function NoteEditorPage() {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [flowchartInputMode, setFlowchartInputMode] = useState<'code' | 'outline'>('code');
+  const [outlineText, setOutlineText] = useState('');
   const [showTOC, setShowTOC] = useState(false);
   const [syncToCloud, setSyncToCloud] = useState<boolean>(true);
   const [toc, setToc] = useState<{ level: number; text: string; id: string }[]>([]);
@@ -879,47 +883,127 @@ export function NoteEditorPage() {
               </button>
             </div>
           </div>
-          <div className="border-t border-secondary-200/80 dark:border-secondary-700/80 px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto scrollbar-thin bg-secondary-50/70 dark:bg-secondary-800/40">
-            <button
-              onClick={() => {
-                if (!content.trim()) {
-                  toast.error('Please enter Mermaid diagram code to render');
-                  return;
-                }
-                renderFlowchart(content);
-              }}
-              className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1 shrink-0"
-              disabled={isFlowchartRendering}
-            >
-              <RotateCcw className={cn("w-3.5 h-3.5", isFlowchartRendering && "animate-spin")} />
-              {isFlowchartRendering ? 'Rendering...' : 'Render'}
-            </button>
-            <button onClick={() => handleExport()} className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1 shrink-0" disabled={!flowchartSvg}>
-              <Download className="w-3.5 h-3.5" />
-              Export SVG
-            </button>
-            <select value={noteType} onChange={e => setNoteType(e.target.value as NoteType)} className="input text-xs py-1 px-2 w-auto shrink-0">
-              <option value="markdown">Markdown</option>
-              <option value="flowchart">Flowchart</option>
-              <option value="diagram">Diagram</option>
-            </select>
+          <div className="border-t border-secondary-200/80 dark:border-secondary-700/80 px-3 sm:px-4 py-1.5 flex items-center justify-between gap-2 overflow-x-auto scrollbar-thin bg-secondary-50/70 dark:bg-secondary-800/40">
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  if (!content.trim()) {
+                    toast.error('Please enter Mermaid diagram code to render');
+                    return;
+                  }
+                  renderFlowchart(content);
+                }}
+                className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1 shrink-0"
+                disabled={isFlowchartRendering}
+              >
+                <RotateCcw className={cn("w-3.5 h-3.5", isFlowchartRendering && "animate-spin")} />
+                {isFlowchartRendering ? 'Rendering...' : 'Render'}
+              </button>
+              <button onClick={() => handleExport()} className="btn-secondary py-1 px-2.5 text-xs flex items-center gap-1 shrink-0" disabled={!flowchartSvg}>
+                <Download className="w-3.5 h-3.5" />
+                Export SVG
+              </button>
+
+              {/* Mode Toggle: Mermaid Code vs flowchart.fun Simple Outline */}
+              <div className="flex items-center rounded-lg bg-secondary-200/80 dark:bg-secondary-800/80 p-0.5 border border-secondary-300/60 dark:border-secondary-700/60 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setFlowchartInputMode('code')}
+                  className={cn(
+                    'px-2 py-0.5 rounded-md font-medium transition-all text-xs',
+                    flowchartInputMode === 'code'
+                      ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-2xs font-semibold'
+                      : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                  )}
+                >
+                  Mermaid Code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const outline = flowchartToOutline(content);
+                    setOutlineText(outline);
+                    setFlowchartInputMode('outline');
+                  }}
+                  className={cn(
+                    'px-2 py-0.5 rounded-md font-medium transition-all text-xs flex items-center gap-1',
+                    flowchartInputMode === 'outline'
+                      ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-2xs font-semibold'
+                      : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                  )}
+                  title="Edit as simple indented text outline (like flowchart.fun)"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span>Simple Outline</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <select value={noteType} onChange={e => setNoteType(e.target.value as NoteType)} className="input text-xs py-1 px-2 w-auto shrink-0">
+                <option value="markdown">Markdown</option>
+                <option value="flowchart">Flowchart</option>
+                <option value="diagram">Diagram</option>
+              </select>
+            </div>
           </div>
         </div>
         <div className="flex-1 min-h-0 flex overflow-hidden">
           <div className="w-1/2 border-r border-secondary-200 dark:border-secondary-700 flex flex-col overflow-hidden font-mono text-sm bg-secondary-50 dark:bg-secondary-950">
-            <textarea
-              ref={editorRef}
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1 w-full p-4 bg-transparent border-none resize-none text-secondary-900 dark:text-white focus:outline-none overflow-y-auto scrollbar-thin leading-relaxed"
-              placeholder="Enter Mermaid diagram code..."
-              spellCheck={false}
-            />
+            {flowchartInputMode === 'outline' ? (
+              <div className="flex-1 flex flex-col min-h-0">
+                <div className="px-3 py-1.5 bg-amber-500/10 border-b border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-300 flex items-center justify-between">
+                  <span>💡 <strong>Outline Mode</strong>: Indent lines by 2 spaces to branch (like flowchart.fun)</span>
+                  <span className="text-secondary-400">Auto-syncs to Mermaid</span>
+                </div>
+                <textarea
+                  value={outlineText}
+                  onChange={(e) => {
+                    const text = e.target.value;
+                    setOutlineText(text);
+                    const converted = outlineToFlowchart(text);
+                    setContent(converted);
+                    setIsDirty(true);
+                    renderFlowchart(converted);
+                  }}
+                  onKeyDown={(e) => {
+                    // Support Tab key indentation
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      const target = e.target as HTMLTextAreaElement;
+                      const start = target.selectionStart;
+                      const end = target.selectionEnd;
+                      const nextText = outlineText.substring(0, start) + '  ' + outlineText.substring(end);
+                      setOutlineText(nextText);
+                      const converted = outlineToFlowchart(nextText);
+                      setContent(converted);
+                      setIsDirty(true);
+                      renderFlowchart(converted);
+                      setTimeout(() => {
+                        target.selectionStart = target.selectionEnd = start + 2;
+                      }, 0);
+                    }
+                  }}
+                  className="flex-1 w-full p-4 bg-transparent border-none resize-none text-secondary-900 dark:text-white focus:outline-none overflow-y-auto scrollbar-thin leading-relaxed"
+                  placeholder={"Start\n  Process Data\n    Is valid?\n      Save to database\n      Show error"}
+                  spellCheck={false}
+                />
+              </div>
+            ) : (
+              <textarea
+                ref={editorRef}
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="flex-1 w-full p-4 bg-transparent border-none resize-none text-secondary-900 dark:text-white focus:outline-none overflow-y-auto scrollbar-thin leading-relaxed"
+                placeholder="Enter Mermaid diagram code..."
+                spellCheck={false}
+              />
+            )}
           </div>
-          <div className="w-1/2 overflow-y-auto p-4 bg-white dark:bg-secondary-900 scrollbar-thin">
+          <div className="w-1/2 flex flex-col overflow-hidden bg-secondary-900">
             {flowchartError ? (
-              <div className="h-full flex flex-col justify-center items-center p-4">
+              <div className="h-full flex flex-col justify-center items-center p-4 overflow-y-auto scrollbar-thin">
                 <div className="w-full max-w-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-2xl p-5 text-left shadow-sm">
                   <div className="flex items-center gap-2.5 text-red-700 dark:text-red-300 font-bold mb-2 text-sm">
                     <div className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">
@@ -974,7 +1058,21 @@ export function NoteEditorPage() {
                 </div>
               </div>
             ) : flowchartSvg ? (
-              <div className="w-full h-full flex items-center justify-center overflow-auto" dangerouslySetInnerHTML={{ __html: flowchartSvg }} />
+              <FlowchartCanvas
+                svg={flowchartSvg}
+                code={content}
+                onChangeCode={(newCode) => {
+                  setContent(newCode);
+                  setIsDirty(true);
+                  if (flowchartInputMode === 'outline') {
+                    setOutlineText(flowchartToOutline(newCode));
+                  }
+                }}
+                onRender={(codeToRender) => {
+                  renderFlowchart(codeToRender || content);
+                }}
+                isRendering={isFlowchartRendering}
+              />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-secondary-500 gap-2">
                 <RotateCcw className="w-8 h-8 opacity-30 text-secondary-400" />
