@@ -56,10 +56,10 @@ async def render_flowchart(
         
         return {"svg": svg}
     except ImportError:
-        import html
-        escaped_code = html.escape(data.code)
-        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300"><rect width="100%" height="100%" fill="#1e293b" rx="8"/><foreignObject x="20" y="20" width="560" height="260"><pre xmlns="http://www.w3.org/1999/xhtml" style="color: #f8fafc; font-family: monospace; font-size: 13px; white-space: pre-wrap;">{escaped_code}</pre></foreignObject></svg>'
-        return {"svg": svg}
+        raise HTTPException(
+            status_code=400,
+            detail="Server-side Mermaid rendering is not available on this host. Use the interactive client renderer in Chitralekh."
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to render flowchart: {str(e)}")
 
@@ -107,11 +107,10 @@ async def export_flowchart(
         from fastapi.responses import Response
         return Response(content=output, media_type=media_type)
     except ImportError:
-        import html
-        from fastapi.responses import Response
-        escaped_code = html.escape(note.content or "")
-        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300"><rect width="100%" height="100%" fill="#1e293b" rx="8"/><foreignObject x="20" y="20" width="560" height="260"><pre xmlns="http://www.w3.org/1999/xhtml" style="color: #f8fafc; font-family: monospace; font-size: 13px; white-space: pre-wrap;">{escaped_code}</pre></foreignObject></svg>'
-        return Response(content=svg, media_type="image/svg+xml")
+        raise HTTPException(
+            status_code=400,
+            detail="Server-side export requires mermaid library on host. Please export directly as SVG from the Chitralekh browser client."
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to export flowchart: {str(e)}")
 

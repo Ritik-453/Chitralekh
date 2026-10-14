@@ -2,58 +2,14 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { flowchartsApi } from '../services/api';
 import type { FlowchartData } from '../types';
 import toast from 'react-hot-toast';
+import {
+  removeMermaidErrorElements,
+  autoQuoteMermaidLabels,
+  hasValidMermaidHeader,
+  VALID_MERMAID_STARTERS,
+} from '../utils/mermaid';
 
-/**
- * Removes any error elements Mermaid.js may have injected into document.body.
- * By default, Mermaid injects <div id="dmermaid-..." class="error-icon">...</div> into <body>
- * when syntax errors occur, causing them to pile up outside the React app.
- */
-export const removeMermaidErrorElements = (containerId?: string) => {
-  if (typeof document === 'undefined') return;
-
-  if (containerId) {
-    document.getElementById(containerId)?.remove();
-    document.getElementById(`d${containerId}`)?.remove();
-  }
-
-  // Remove any elements Mermaid injected into document.body
-  const errorElements = document.querySelectorAll(
-    'body > [id^="dmermaid"], body > [id^="mermaid-"], body > svg[id^="dmermaid"], body > .error-icon, body > [class*="error-icon"]'
-  );
-  errorElements.forEach(el => el.remove());
-
-  // Also remove any direct body elements whose text contains Mermaid error signatures
-  document.querySelectorAll('body > div, body > svg').forEach(el => {
-    if (el.textContent?.includes('Syntax error in text') && el.textContent?.includes('mermaid version')) {
-      el.remove();
-    }
-  });
-};
-
-const VALID_MERMAID_STARTERS = [
-  'flowchart',
-  'graph',
-  'sequencediagram',
-  'classdiagram',
-  'statediagram',
-  'statediagram-v2',
-  'erdiagram',
-  'journey',
-  'gantt',
-  'pie',
-  'quadrantchart',
-  'requirementdiagram',
-  'gitgraph',
-  'c4context',
-  'mindmap',
-  'timeline',
-  'sankey-beta',
-  'xychart-beta',
-  'block-beta',
-  'architecture-beta',
-  'packet-beta',
-  'kanban',
-];
+export { removeMermaidErrorElements, autoQuoteMermaidLabels, VALID_MERMAID_STARTERS };
 
 export function useFlowchart() {
   const [isRendering, setIsRendering] = useState(false);
@@ -75,9 +31,9 @@ export function useFlowchart() {
 
     const trimmed = code.trim();
     const firstToken = trimmed.split(/[\s\n\r(]/)[0].toLowerCase();
-    const hasValidHeader = VALID_MERMAID_STARTERS.some(s => s === firstToken || trimmed.toLowerCase().startsWith(s));
+    const hasValidHeader = hasValidMermaidHeader(trimmed);
 
-    // Fast-fail if the user typed plain text (e.g. "hlo saurav yadav") without a diagram header
+    // Fast-fail if the user typed plain text without a diagram header
     if (!hasValidHeader) {
       removeMermaidErrorElements();
       const friendlyErr = `Diagram must begin with a valid Mermaid diagram type (e.g., "flowchart TD", "graph TD", "sequenceDiagram", "mindmap"). Found "${firstToken || 'text'}".`;
@@ -103,34 +59,57 @@ export function useFlowchart() {
         fontFamily: 'Inter, system-ui, sans-serif',
       });
 
-      // Parse first with suppressErrors to catch syntax issues without DOM pollution
+      let codeToRender = trimmed;
+      let isValid = false;
+
+      // First attempt direct parse
       try {
         await mermaid.parse(trimmed, { suppressErrors: true });
-      } catch (parseErr: any) {
-        removeMermaidErrorElements(id);
-        const rawMsg = parseErr?.message || parseErr?.str || 'Invalid Mermaid syntax';
-        const cleanMsg = rawMsg
-          .replace(/\n#dmermaid[^\n]*/g, '')
-          .replace(/mermaid version \d+\.\d+\.\d+/gi, '')
-          .trim();
-        setError(cleanMsg);
-        setSvg('');
-        setIsRendering(false);
-        return;
+        isValid = true;
+      } catch (directErr: any) {
+        // Direct parse failed; try auto-quoting complex node labels (e.g. math with parentheses or colons)
+        const autoQuoted = autoQuoteMermaidLabels(trimmed);
+        if (autoQuoted !== trimmed) {
+          try {
+            await mermaid.parse(autoQuoted, { suppressErrors: true });
+            codeToRender = autoQuoted;
+            isValid = true;
+          } catch {
+            // Both failed
+          }
+        }
+
+        if (!isValid) {
+          removeMermaidErrorElements(id);
+          const rawMsg = directErr?.message || directErr?.str || 'Invalid Mermaid syntax';
+          const cleanMsg = rawMsg
+            .replace(/\n#dmermaid[^\n]*/g, '')
+            .replace(/mermaid version \d+\.\d+\.\d+/gi, '')
+            .trim();
+          setError(cleanMsg);
+          setSvg('');
+          setIsRendering(false);
+          return;
+        }
       }
 
       // Syntax is valid, render SVG
-      const { svg: renderedSvg } = await mermaid.render(id, trimmed);
+      const { svg: renderedSvg } = await mermaid.render(id, codeToRender);
       removeMermaidErrorElements(id);
       setSvg(renderedSvg);
       setError(null);
     } catch (clientErr: any) {
       removeMermaidErrorElements(id);
 
-      // Attempt fallback to backend API if available
+      // Attempt fallback to backend API if available, but reject fake SVG fallbacks
       try {
         const response = await flowchartsApi.render({ code: trimmed, theme, direction });
-        setSvg(response.data.svg);
+        const returnedSvg = response.data?.svg || '';
+        // If the backend returns a mock/fallback pre-block inside SVG, do not treat as rendered flowchart
+        if (returnedSvg.includes('<foreignObject') && returnedSvg.includes('<pre')) {
+          throw new Error('Could not render diagram on backend');
+        }
+        setSvg(returnedSvg);
         setError(null);
       } catch (err: any) {
         removeMermaidErrorElements(id);

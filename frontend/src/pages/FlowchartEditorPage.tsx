@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNote, useFlowchart, useFlowchartTemplates } from '../hooks';
 import { notesApi } from '../services/api';
-import { Save, RotateCcw, Download, Copy, Maximize2, Minimize2, ChevronLeft, Menu, X, Plus, Trash2, Settings, Code, Type, GitBranch, Eye, EyeOff, ExternalLink, Share2 } from 'lucide-react';
+import { Save, RotateCcw, Download, Copy, Maximize2, Minimize2, ChevronLeft, Menu, X, Plus, Trash2, Settings, Code, Type, GitBranch, Eye, EyeOff, ExternalLink, Share2, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '../utils';
+import { autoQuoteMermaidLabels } from '../utils/mermaid';
 import toast from 'react-hot-toast';
 
 export function FlowchartEditorPage() {
@@ -204,7 +205,7 @@ export function FlowchartEditorPage() {
                 <button onClick={() => handleExport('png')} className="btn-ghost p-1.5" title="Export PNG"><Download className="w-4 h-4" /></button>
               </div>
             </div>
-            <div className="flex-1 p-4 overflow-auto" style={{ backgroundColor: selectedTheme === 'dark' ? '#1e1e1e' : 'white' }}>
+            <div className="flex-1 p-4 overflow-auto scrollbar-thin" style={{ backgroundColor: selectedTheme === 'dark' ? '#1e1e1e' : 'white' }}>
               {flowchartError ? (
                 <div className="h-full flex items-center justify-center p-4">
                   <div className="max-w-md w-full bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl p-4 text-left shadow-sm">
@@ -215,9 +216,24 @@ export function FlowchartEditorPage() {
                     <pre className="text-xs font-mono text-red-600 dark:text-red-300 bg-white/70 dark:bg-secondary-900/70 p-2.5 rounded border border-red-200 dark:border-red-900/40 whitespace-pre-wrap break-words leading-relaxed mb-3">
                       {flowchartError}
                     </pre>
-                    <p className="text-[11px] text-secondary-500 dark:text-secondary-400">
-                      💡 Tip: Use a starter like <code>flowchart TD</code>, <code>sequenceDiagram</code>, or select from the Templates menu above.
-                    </p>
+                    <div className="text-[11px] text-secondary-500 dark:text-secondary-400 space-y-2">
+                      <p>💡 Tip: Use quotes for complex labels like <code>D["e^(iπ) + 1 = 0"]</code>.</p>
+                      {autoQuoteMermaidLabels(content) !== content && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const fixed = autoQuoteMermaidLabels(content);
+                            setContent(fixed);
+                            renderFlowchart(fixed, selectedTheme, direction);
+                            toast.success('Auto-quoted special characters & math formulas!');
+                          }}
+                          className="btn-primary py-1.5 px-3 text-xs w-full justify-center flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Auto-Fix Quotes & Special Symbols</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : flowchartSvg ? (

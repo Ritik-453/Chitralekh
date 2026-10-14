@@ -67,7 +67,12 @@ function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <GuestBanner />
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative flex flex-col">
+        <main className={cn(
+          'flex-1 min-h-0 relative flex flex-col',
+          location.pathname.startsWith('/notes/') && !['/notes/pinned', '/notes/favorites', '/notes/archived'].includes(location.pathname)
+            ? 'overflow-hidden'
+            : 'overflow-y-auto overflow-x-hidden'
+        )}>
           <Outlet />
         </main>
       </div>

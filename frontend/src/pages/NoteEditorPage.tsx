@@ -78,6 +78,8 @@ import { GuestAuthModal } from '../components/GuestAuthModal';
 import { FileImportModal } from '../components/FileImportModal';
 import { useTourStatus } from '../hooks/useTourStatus';
 import { compressImageToWebP } from '../utils/compression';
+import { MermaidDiagram } from '../components/MermaidDiagram';
+import { autoQuoteMermaidLabels } from '../utils/mermaid';
 import toast from 'react-hot-toast';
 
 const TOOLBAR_BUTTONS = [
@@ -904,18 +906,18 @@ export function NoteEditorPage() {
           </div>
         </div>
         <div className="flex-1 min-h-0 flex overflow-hidden">
-          <div className="w-1/2 border-r border-secondary-200 dark:border-secondary-700 overflow-y-auto p-4 font-mono text-sm bg-secondary-50 dark:bg-secondary-950">
+          <div className="w-1/2 border-r border-secondary-200 dark:border-secondary-700 flex flex-col overflow-hidden font-mono text-sm bg-secondary-50 dark:bg-secondary-950">
             <textarea
               ref={editorRef}
               value={content}
               onChange={e => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full h-full bg-transparent border-none resize-none text-secondary-900 dark:text-white focus:outline-none"
+              className="flex-1 w-full p-4 bg-transparent border-none resize-none text-secondary-900 dark:text-white focus:outline-none overflow-y-auto scrollbar-thin leading-relaxed"
               placeholder="Enter Mermaid diagram code..."
               spellCheck={false}
             />
           </div>
-          <div className="w-1/2 overflow-y-auto p-4 bg-white dark:bg-secondary-900">
+          <div className="w-1/2 overflow-y-auto p-4 bg-white dark:bg-secondary-900 scrollbar-thin">
             {flowchartError ? (
               <div className="h-full flex flex-col justify-center items-center p-4">
                 <div className="w-full max-w-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-2xl p-5 text-left shadow-sm">
@@ -930,7 +932,25 @@ export function NoteEditorPage() {
                   </pre>
                   <div className="text-xs text-secondary-600 dark:text-secondary-400 space-y-2">
                     <p className="font-semibold text-secondary-800 dark:text-secondary-200">💡 Quick Fix:</p>
-                    <p>Flowcharts require a diagram header on the first line (e.g. <code>flowchart TD</code> or <code>graph TD</code>).</p>
+                    <p>Labels with parentheses, colons, or math must be enclosed in quotes like <code>D["e^(iπ) + 1 = 0"]</code>.</p>
+                    
+                    {autoQuoteMermaidLabels(content) !== content && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fixed = autoQuoteMermaidLabels(content);
+                          setContent(fixed);
+                          setIsDirty(true);
+                          renderFlowchart(fixed);
+                          toast.success('Auto-quoted special characters & math formulas!');
+                        }}
+                        className="btn-primary py-1.5 px-3 text-xs w-full justify-center flex items-center gap-1.5 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Auto-Fix Quotes & Special Symbols</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => {
@@ -945,10 +965,10 @@ export function NoteEditorPage() {
                         setIsDirty(true);
                         renderFlowchart(sample);
                       }}
-                      className="btn-primary py-1.5 px-3 text-xs w-full justify-center flex items-center gap-1.5 mt-2"
+                      className="btn-secondary py-1.5 px-3 text-xs w-full justify-center flex items-center gap-1.5 mt-1.5"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Convert to Flowchart Diagram</span>
+                      <span>Convert Text to Flowchart Diagram</span>
                     </button>
                   </div>
                 </div>
@@ -1338,7 +1358,7 @@ export function NoteEditorPage() {
 
       {/* Editor Main Content Area */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
-        <div className={cn('flex-1 min-w-0 border-r border-secondary-200 dark:border-secondary-700 overflow-y-auto', showPreview && 'hidden')}>
+        <div className={cn('flex-1 min-w-0 border-r border-secondary-200 dark:border-secondary-700 flex flex-col overflow-hidden', showPreview && 'hidden')}>
           <textarea
             ref={editorRef}
             value={content}
@@ -1346,13 +1366,13 @@ export function NoteEditorPage() {
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             onDrop={handleDrop}
-            className="w-full h-full p-4 bg-transparent border-none resize-none text-secondary-900 dark:text-white focus:outline-none font-mono text-sm leading-relaxed"
+            className="flex-1 w-full p-4 bg-transparent border-none resize-none text-secondary-900 dark:text-white focus:outline-none font-mono text-sm leading-relaxed overflow-y-auto scrollbar-thin"
             placeholder="Start writing your note... (Markdown supported. Paste or drop images directly onto the line!)"
             spellCheck={true}
           />
         </div>
 
-        <div className={cn('flex-1 min-w-0 overflow-y-auto', !showPreview && 'hidden')}>
+        <div className={cn('flex-1 min-w-0 overflow-y-auto scrollbar-thin', !showPreview && 'hidden')}>
           <div ref={previewRef} className="p-6 max-w-3xl mx-auto prose prose-secondary dark:prose-invert">
             <ReactMarkdown
               components={{
@@ -1377,6 +1397,10 @@ export function NoteEditorPage() {
                   );
                 },
                 code: ({ node, inline, className, children, ...props }: any) => {
+                  const match = /language-(\w+)/.exec(className || '');
+                  if (!inline && match && match[1] === 'mermaid') {
+                    return <MermaidDiagram code={String(children).replace(/\n$/, '')} />;
+                  }
                   if (inline) {
                     return (
                       <code className="inline-code" {...props}>

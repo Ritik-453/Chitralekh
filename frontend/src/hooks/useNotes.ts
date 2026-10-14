@@ -39,13 +39,13 @@ export function useNotes(initialParams?: SearchParams) {
 
 \`\`\`mermaid
 graph TD
-    A[📚 College Lecture / Textbook] --> B(🪶 Chitralekh Visual Notes)
-    B --> C{Review Stage}
-    C -->|Equations & Math| D[📐 LaTeX Formulas: e^(iπ) + 1 = 0]
-    C -->|Visual Concepts| E[📊 Mermaid Diagrams & Mindmaps]
-    D --> F[🏛️ Central Academic Repository]
+    A["📚 College Lecture / Textbook"] --> B("🪶 Chitralekh Visual Notes")
+    B --> C{"Review Stage"}
+    C -->|Equations & Math| D["📐 LaTeX Formulas: e^(iπ) + 1 = 0"]
+    C -->|Visual Concepts| E["📊 Mermaid Diagrams & Mindmaps"]
+    D --> F["🏛️ Central Academic Repository"]
     E --> F
-    F --> G[🎓 Junior Batches Inherit & Update Heritage]
+    F --> G["🎓 Junior Batches Inherit & Update Heritage"]
 \`\`\`
 
 - **LaTeX Mathematics:**
