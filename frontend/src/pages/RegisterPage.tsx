@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Github, Globe, CheckCircle, Sparkles } from 'lucide-react';
 import { cn } from '../utils';
 import { API_URL } from '../services/api';
+import { OAuthHelpModal } from '../components/OAuthHelpModal';
 import toast from 'react-hot-toast';
 
 export function RegisterPage() {
@@ -18,6 +19,19 @@ export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [oauthStatus, setOauthStatus] = useState<{ google: boolean; github: boolean; microsoft: boolean }>({
+    google: false,
+    github: false,
+    microsoft: false,
+  });
+  const [oauthHelpProvider, setOauthHelpProvider] = useState<'github' | 'google' | 'microsoft' | null>(null);
+
+  React.useEffect(() => {
+    fetch(`${API_URL}/auth/oauth/status`)
+      .then(res => res.json())
+      .then(data => setOauthStatus(data))
+      .catch(() => {});
+  }, []);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -63,7 +77,11 @@ export function RegisterPage() {
     }
   };
 
-  const handleOAuthLogin = (provider: string) => {
+  const handleOAuthLogin = (provider: 'github' | 'google' | 'microsoft') => {
+    if (!oauthStatus[provider]) {
+      setOauthHelpProvider(provider);
+      return;
+    }
     window.location.href = `${API_URL}/auth/oauth/${provider}`;
   };
 
@@ -327,6 +345,15 @@ export function RegisterPage() {
           </p>
         </div>
       </div>
+
+      <OAuthHelpModal
+        provider={oauthHelpProvider}
+        onClose={() => setOauthHelpProvider(null)}
+        onContinueGuest={() => {
+          loginAsGuest();
+          navigate('/');
+        }}
+      />
     </div>
   );
 }

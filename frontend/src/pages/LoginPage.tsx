@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Github, Globe, Sparkles } from 'lucide-react';
 import { cn } from '../utils';
 import { API_URL, setAccessToken } from '../services/api';
+import { OAuthHelpModal } from '../components/OAuthHelpModal';
 import toast from 'react-hot-toast';
 
 export function LoginPage() {
@@ -16,17 +17,37 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [oauthStatus, setOauthStatus] = useState<{ google: boolean; github: boolean; microsoft: boolean }>({
+    google: false,
+    github: false,
+    microsoft: false,
+  });
+  const [oauthHelpProvider, setOauthHelpProvider] = useState<'github' | 'google' | 'microsoft' | null>(null);
 
   useEffect(() => {
+    fetch(`${API_URL}/auth/oauth/status`)
+      .then(res => res.json())
+      .then(data => setOauthStatus(data))
+      .catch(() => {});
+
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const refresh = params.get('refresh');
+    const oauthError = params.get('oauth_error');
+    const provider = params.get('provider') as 'github' | 'google' | 'microsoft' | null;
+
     if (token) {
       const authTokens = { access_token: token, refresh_token: refresh || '', token_type: 'bearer' };
       localStorage.setItem('auth_tokens', JSON.stringify(authTokens));
       setAccessToken(token);
       toast.success('Successfully signed in with OAuth!');
       window.location.href = '/';
+    } else if (oauthError) {
+      toast.error(decodeURIComponent(oauthError), { duration: 6000 });
+      if (provider) {
+        setOauthHelpProvider(provider);
+      }
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
@@ -57,7 +78,11 @@ export function LoginPage() {
     }
   };
 
-  const handleOAuthLogin = (provider: string) => {
+  const handleOAuthLogin = (provider: 'github' | 'google' | 'microsoft') => {
+    if (!oauthStatus[provider]) {
+      setOauthHelpProvider(provider);
+      return;
+    }
     window.location.href = `${API_URL}/auth/oauth/${provider}`;
   };
 
@@ -252,6 +277,15 @@ export function LoginPage() {
           </p>
         </div>
       </div>
+
+      <OAuthHelpModal
+        provider={oauthHelpProvider}
+        onClose={() => setOauthHelpProvider(null)}
+        onContinueGuest={() => {
+          loginAsGuest();
+          navigate('/');
+        }}
+      />
     </div>
   );
 }

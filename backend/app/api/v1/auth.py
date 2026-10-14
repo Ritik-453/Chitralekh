@@ -214,11 +214,22 @@ async def delete_account(
     return {"message": "Account deleted successfully"}
 
 
+
 def get_oauth_redirect_uri(request: Request, provider: str) -> str:
     base = os.environ.get("RENDER_EXTERNAL_URL") or str(request.base_url).rstrip('/')
     if base.startswith("http://") and "localhost" not in base:
         base = "https://" + base[len("http://"):]
     return f"{base}{settings.API_V1_STR}/auth/oauth/{provider}/callback"
+
+
+@router.get("/oauth/status")
+async def get_oauth_status():
+    """Check which OAuth providers are configured on this backend instance."""
+    return {
+        "google": bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET),
+        "github": bool(settings.GITHUB_CLIENT_ID and settings.GITHUB_CLIENT_SECRET),
+        "microsoft": bool(settings.MICROSOFT_CLIENT_ID and settings.MICROSOFT_CLIENT_SECRET),
+    }
 
 
 @router.get("/oauth/{provider}")
@@ -231,13 +242,19 @@ async def oauth_login(provider: str, request: Request):
         "github": settings.GITHUB_CLIENT_ID,
         "microsoft": settings.MICROSOFT_CLIENT_ID,
     }
+    client_secret_map = {
+        "google": settings.GOOGLE_CLIENT_SECRET,
+        "github": settings.GITHUB_CLIENT_SECRET,
+        "microsoft": settings.MICROSOFT_CLIENT_SECRET,
+    }
     
     client_id = client_id_map.get(provider)
-    if not client_id:
-        raise HTTPException(
-            status_code=400,
-            detail=f"{provider} OAuth not configured. Please set {provider.upper()}_CLIENT_ID and {provider.upper()}_CLIENT_SECRET in environment variables, or sign in with email/password."
-        )
+    client_secret = client_secret_map.get(provider)
+    if not client_id or not client_secret:
+        import urllib.parse
+        frontend_url = os.environ.get("FRONTEND_URL") or "https://chitralekh-frontend.onrender.com"
+        msg = f"{provider.capitalize()} OAuth is not configured on Render. Please set {provider.upper()}_CLIENT_ID and {provider.upper()}_CLIENT_SECRET in environment variables, or sign in with email/password."
+        return RedirectResponse(url=f"{frontend_url}/login?oauth_error={urllib.parse.quote(msg)}&provider={provider}")
     
     cb_url = get_oauth_redirect_uri(request, provider)
     redirect_url_map = {
@@ -273,8 +290,11 @@ async def oauth_callback(
     client_id = client_id_map.get(provider)
     client_secret = client_secret_map.get(provider)
     
+    frontend_url = os.environ.get("FRONTEND_URL") or "https://chitralekh-frontend.onrender.com"
+    import urllib.parse
+    
     if not client_id or not client_secret:
-        raise HTTPException(status_code=400, detail=f"{provider} OAuth not configured")
+        return RedirectResponse(url=f"{frontend_url}/login?oauth_error={urllib.parse.quote(f'{provider.capitalize()} OAuth credentials not configured')}")
     
     token_url_map = {
         "google": "https://oauth2.googleapis.com/token",
@@ -303,7 +323,7 @@ async def oauth_callback(
         )
         
         if token_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to get access token")
+            return RedirectResponse(url=f"{frontend_url}/login?oauth_error={urllib.parse.quote('Failed to exchange authorization code for access token')}")
         
         token_data = token_response.json()
         access_token = token_data.get("access_token")
@@ -316,7 +336,7 @@ async def oauth_callback(
         )
         
         if user_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to get user info")
+            return RedirectResponse(url=f"{frontend_url}/login?oauth_error={urllib.parse.quote('Failed to fetch user profile from provider')}")
         
         user_data = user_response.json()
         
