@@ -3,7 +3,7 @@ import { Copy, Check, ExternalLink, X, ShieldAlert, Sparkles, ArrowRight } from 
 import { API_URL } from '../services/api';
 
 interface OAuthHelpModalProps {
-  provider: 'github' | 'google' | 'microsoft' | null;
+  provider: 'github' | 'google' | null;
   onClose: () => void;
   onContinueGuest: () => void;
 }
@@ -51,22 +51,6 @@ export const OAuthHelpModal: React.FC<OAuthHelpModalProps> = ({
         'Add "https://chitralekh-frontend.onrender.com" to Authorized JavaScript origins.',
         'Paste the Callback URL below into Authorized redirect URIs.',
         'Add the generated Client ID and Client Secret in Render Environment variables.',
-      ],
-    },
-    microsoft: {
-      name: 'Microsoft',
-      color: 'bg-blue-600 text-white',
-      badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
-      consoleUrl: 'https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade',
-      consoleName: 'Azure Portal (App Registrations)',
-      clientIdKey: 'MICROSOFT_CLIENT_ID',
-      clientSecretKey: 'MICROSOFT_CLIENT_SECRET',
-      instructions: [
-        'Open Azure Portal > Microsoft Entra ID > App registrations > "+ New registration".',
-        'Set Name to "Chitralekh" and Supported account types to Multitenant & personal accounts.',
-        'Select Platform: Web, and paste the Callback URL below.',
-        'Under "Certificates & secrets", click "+ New client secret" and copy the secret Value.',
-        'Add the Application (client) ID and Client Secret in Render Environment variables.',
       ],
     },
   };

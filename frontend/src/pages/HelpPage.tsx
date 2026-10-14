@@ -51,7 +51,7 @@ const helpCategories = [
     label: 'Account & Security',
     icon: Shield,
     articles: [
-      { id: 'oauth', title: 'OAuth Login', content: 'Sign in with Google, GitHub, or Microsoft.' },
+      { id: 'oauth', title: 'OAuth Login', content: 'Sign in with Google or GitHub.' },
       { id: 'password', title: 'Password Management', content: 'Change password, reset, and security best practices.' },
       { id: 'data-export', title: 'Data Export & Import', content: 'Backup your data and restore from exports.' },
       { id: 'deletion', title: 'Account Deletion', content: 'How to delete your account and what happens to your data.' },

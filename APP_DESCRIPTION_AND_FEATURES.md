@@ -87,7 +87,7 @@ graph TD
 - **JWT Token Authentication**:
   - Short-lived Access Tokens (30 minutes default) for stateless API authorization.
   - Long-lived Refresh Tokens (7 days default) with database-tracked revocation records (`refresh_tokens` table) to support seamless token rotation and instant multi-device logout.
-- **OAuth2 Social Sign-In**: Integration hooks for Google, GitHub, and Microsoft OAuth authentication.
+- **OAuth2 Social Sign-In**: Integration hooks for Google and GitHub OAuth authentication.
 - **Role-Based Permissions**: User roles (`student`, `teacher`, `admin`) to support multi-user institutions and classroom management.
 - **Remember Me Support**: Configurable persistent session duration for frictionless sign-in across browser sessions.
 - **Password Security**: Bcrypt-hashed password storage; password reset and email verification token workflows.
@@ -388,7 +388,7 @@ All routes are versioned under `/api/v1` and protected via JWT Bearer authentica
 | `POST` | `/auth/refresh` | Exchange valid refresh token for a new access token | Public |
 | `POST` | `/auth/logout` | Revoke active refresh token | Authenticated |
 | `GET` | `/auth/me` | Fetch active user profile and roles | Authenticated |
-| `GET` | `/auth/oauth/{provider}` | Initiate OAuth sign-in (Google/GitHub/Microsoft) | Public |
+| `GET` | `/auth/oauth/{provider}` | Initiate OAuth sign-in (Google/GitHub) | Public |
 | `GET` | `/auth/oauth/{provider}/callback` | Process OAuth provider redirect callback | Public |
 
 ### Notes Endpoints (`/api/v1/notes`)

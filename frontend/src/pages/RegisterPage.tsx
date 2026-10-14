@@ -19,12 +19,11 @@ export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [oauthStatus, setOauthStatus] = useState<{ google: boolean; github: boolean; microsoft: boolean }>({
+  const [oauthStatus, setOauthStatus] = useState<{ google: boolean; github: boolean }>({
     google: false,
     github: false,
-    microsoft: false,
   });
-  const [oauthHelpProvider, setOauthHelpProvider] = useState<'github' | 'google' | 'microsoft' | null>(null);
+  const [oauthHelpProvider, setOauthHelpProvider] = useState<'github' | 'google' | null>(null);
 
   React.useEffect(() => {
     fetch(`${API_URL}/auth/oauth/status`)
@@ -77,7 +76,7 @@ export function RegisterPage() {
     }
   };
 
-  const handleOAuthLogin = (provider: 'github' | 'google' | 'microsoft') => {
+  const handleOAuthLogin = (provider: 'github' | 'google') => {
     if (!oauthStatus[provider]) {
       setOauthHelpProvider(provider);
       return;
@@ -303,7 +302,7 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-3 gap-3">
+            <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => handleOAuthLogin('github')}
@@ -312,7 +311,7 @@ export function RegisterPage() {
                 aria-label="Sign up with GitHub"
               >
                 <Github className="w-5 h-5" />
-                <span className="hidden sm:inline">GitHub</span>
+                <span>GitHub</span>
               </button>
               <button
                 type="button"
@@ -322,17 +321,7 @@ export function RegisterPage() {
                 aria-label="Sign up with Google"
               >
                 <Globe className="w-5 h-5" />
-                <span className="hidden sm:inline">Google</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleOAuthLogin('microsoft')}
-                disabled={isLoading}
-                className="btn-secondary flex items-center justify-center gap-2"
-                aria-label="Sign up with Microsoft"
-              >
-                <Globe className="w-5 h-5" />
-                <span className="hidden sm:inline">Microsoft</span>
+                <span>Google</span>
               </button>
             </div>
           </div>

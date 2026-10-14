@@ -228,7 +228,6 @@ function SecurityTab({ user, passwordData, setPasswordData, showCurrentPassword,
           {[
             { provider: 'google', label: 'Google', icon: Chrome, connected: false },
             { provider: 'github', label: 'GitHub', icon: Github, connected: false },
-            { provider: 'microsoft', label: 'Microsoft', icon: Globe, connected: false },
           ].map(item => (
             <div key={item.provider} className="flex items-center justify-between p-3 bg-secondary-50 dark:bg-secondary-800/50 rounded-lg">
               <div className="flex items-center gap-3">

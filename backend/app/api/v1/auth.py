@@ -228,24 +228,21 @@ async def get_oauth_status():
     return {
         "google": bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET),
         "github": bool(settings.GITHUB_CLIENT_ID and settings.GITHUB_CLIENT_SECRET),
-        "microsoft": bool(settings.MICROSOFT_CLIENT_ID and settings.MICROSOFT_CLIENT_SECRET),
     }
 
 
 @router.get("/oauth/{provider}")
 async def oauth_login(provider: str, request: Request):
-    if provider not in ["google", "github", "microsoft"]:
+    if provider not in ["google", "github"]:
         raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
     
     client_id_map = {
         "google": settings.GOOGLE_CLIENT_ID,
         "github": settings.GITHUB_CLIENT_ID,
-        "microsoft": settings.MICROSOFT_CLIENT_ID,
     }
     client_secret_map = {
         "google": settings.GOOGLE_CLIENT_SECRET,
         "github": settings.GITHUB_CLIENT_SECRET,
-        "microsoft": settings.MICROSOFT_CLIENT_SECRET,
     }
     
     client_id = client_id_map.get(provider)
@@ -260,7 +257,6 @@ async def oauth_login(provider: str, request: Request):
     redirect_url_map = {
         "google": f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&redirect_uri={cb_url}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent",
         "github": f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={cb_url}&scope=read:user%20user:email",
-        "microsoft": f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={client_id}&redirect_uri={cb_url}&response_type=code&scope=openid%20email%20profile%20offline_access",
     }
     
     return RedirectResponse(url=redirect_url_map[provider])
@@ -273,18 +269,16 @@ async def oauth_callback(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    if provider not in ["google", "github", "microsoft"]:
+    if provider not in ["google", "github"]:
         raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
     
     client_id_map = {
         "google": settings.GOOGLE_CLIENT_ID,
         "github": settings.GITHUB_CLIENT_ID,
-        "microsoft": settings.MICROSOFT_CLIENT_ID,
     }
     client_secret_map = {
         "google": settings.GOOGLE_CLIENT_SECRET,
         "github": settings.GITHUB_CLIENT_SECRET,
-        "microsoft": settings.MICROSOFT_CLIENT_SECRET,
     }
     
     client_id = client_id_map.get(provider)
@@ -299,13 +293,11 @@ async def oauth_callback(
     token_url_map = {
         "google": "https://oauth2.googleapis.com/token",
         "github": "https://github.com/login/oauth/access_token",
-        "microsoft": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
     }
     
     user_info_url_map = {
         "google": "https://www.googleapis.com/oauth2/v2/userinfo",
         "github": "https://api.github.com/user",
-        "microsoft": "https://graph.microsoft.com/v1.0/me",
     }
     
     cb_url = get_oauth_redirect_uri(request, provider)
@@ -345,7 +337,7 @@ async def oauth_callback(
             email = user_data["email"]
             full_name = user_data.get("name")
             avatar_url = user_data.get("picture")
-        elif provider == "github":
+        else:
             provider_user_id = str(user_data["id"])
             email = user_data.get("email")
             if not email:
@@ -358,11 +350,6 @@ async def oauth_callback(
                 email = primary_email["email"] if primary_email else None
             full_name = user_data.get("name") or user_data.get("login")
             avatar_url = user_data.get("avatar_url")
-        else:
-            provider_user_id = user_data["id"]
-            email = user_data.get("mail") or user_data.get("userPrincipalName")
-            full_name = user_data.get("displayName")
-            avatar_url = None
         
         if not email:
             raise HTTPException(status_code=400, detail="Could not retrieve email from OAuth provider")

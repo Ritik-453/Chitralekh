@@ -81,7 +81,6 @@ class RefreshTokenCreate(BaseModel):
 class OAuthProvider(str):
     GOOGLE = "google"
     GITHUB = "github"
-    MICROSOFT = "microsoft"
 
 
 class OAuthAccountCreate(BaseModel):

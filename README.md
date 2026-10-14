@@ -96,7 +96,7 @@ flowchart TD
     GuestPath --> PreviewStudio["🎨 Live Markdown + Mermaid + KaTeX Editor"]
     
     %% Registered Pathway
-    ModeCheck -- "Login / OAuth" --> AuthAPI["🔐 FastAPI JWT Auth\nGoogle • GitHub • Microsoft"]
+    ModeCheck -- "Login / OAuth" --> AuthAPI["🔐 FastAPI JWT Auth\nGoogle • GitHub"]
     AuthAPI --> CloudDB[("🐘 PostgreSQL Cloud Database")]
     
     %% Central Repository Hub

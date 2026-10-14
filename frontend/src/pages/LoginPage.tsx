@@ -17,12 +17,11 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [oauthStatus, setOauthStatus] = useState<{ google: boolean; github: boolean; microsoft: boolean }>({
+  const [oauthStatus, setOauthStatus] = useState<{ google: boolean; github: boolean }>({
     google: false,
     github: false,
-    microsoft: false,
   });
-  const [oauthHelpProvider, setOauthHelpProvider] = useState<'github' | 'google' | 'microsoft' | null>(null);
+  const [oauthHelpProvider, setOauthHelpProvider] = useState<'github' | 'google' | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/auth/oauth/status`)
@@ -34,7 +33,7 @@ export function LoginPage() {
     const token = params.get('token');
     const refresh = params.get('refresh');
     const oauthError = params.get('oauth_error');
-    const provider = params.get('provider') as 'github' | 'google' | 'microsoft' | null;
+    const provider = params.get('provider') as 'github' | 'google' | null;
 
     if (token) {
       const authTokens = { access_token: token, refresh_token: refresh || '', token_type: 'bearer' };
@@ -78,7 +77,7 @@ export function LoginPage() {
     }
   };
 
-  const handleOAuthLogin = (provider: 'github' | 'google' | 'microsoft') => {
+  const handleOAuthLogin = (provider: 'github' | 'google') => {
     if (!oauthStatus[provider]) {
       setOauthHelpProvider(provider);
       return;
@@ -235,7 +234,7 @@ export function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-3 gap-3">
+            <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => handleOAuthLogin('github')}
@@ -244,7 +243,7 @@ export function LoginPage() {
                 aria-label="Sign in with GitHub"
               >
                 <Github className="w-5 h-5" />
-                <span className="hidden sm:inline">GitHub</span>
+                <span>GitHub</span>
               </button>
               <button
                 type="button"
@@ -254,17 +253,7 @@ export function LoginPage() {
                 aria-label="Sign in with Google"
               >
                 <Globe className="w-5 h-5" />
-                <span className="hidden sm:inline">Google</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleOAuthLogin('microsoft')}
-                disabled={isLoading}
-                className="btn-secondary flex items-center justify-center gap-2"
-                aria-label="Sign in with Microsoft"
-              >
-                <Globe className="w-5 h-5" />
-                <span className="hidden sm:inline">Microsoft</span>
+                <span>Google</span>
               </button>
             </div>
           </div>

@@ -408,7 +408,7 @@ function AccountSettings({ user, profileData, setProfileData, handleUpdateProfil
           <hr className="my-4 border-secondary-200 dark:border-secondary-700" />
           <div>
             <h3 className="font-medium text-secondary-900 dark:text-white mb-3">Connected Accounts</h3>
-            <p className="text-sm text-secondary-500">Manage OAuth connections (Google, GitHub, Microsoft)</p>
+            <p className="text-sm text-secondary-500">Manage OAuth connections (Google, GitHub)</p>
             <button className="btn-secondary mt-2">Manage Accounts</button>
           </div>
         </div>
