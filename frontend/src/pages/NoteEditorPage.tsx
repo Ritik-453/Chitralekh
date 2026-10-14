@@ -183,6 +183,7 @@ export function NoteEditorPage() {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [flowchartInputMode, setFlowchartInputMode] = useState<'code' | 'outline'>('code');
+  const [flowchartLayout, setFlowchartLayout] = useState<'split' | 'canvas' | 'code'>('split');
   const [outlineText, setOutlineText] = useState('');
   const [showTOC, setShowTOC] = useState(false);
   const [syncToCloud, setSyncToCloud] = useState<boolean>(true);
@@ -937,6 +938,50 @@ export function NoteEditorPage() {
                   <span>Simple Outline</span>
                 </button>
               </div>
+
+              {/* View Layout Mode: Split vs Full Canvas vs Code Only */}
+              <div className="flex items-center rounded-lg bg-secondary-200/80 dark:bg-secondary-800/80 p-0.5 border border-secondary-300/60 dark:border-secondary-700/60 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setFlowchartLayout('split')}
+                  className={cn(
+                    'px-2 py-0.5 rounded-md font-medium transition-all text-xs flex items-center gap-1',
+                    flowchartLayout === 'split'
+                      ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-2xs font-semibold'
+                      : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                  )}
+                  title="Side-by-side Split View"
+                >
+                  <span>Split</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFlowchartLayout('canvas')}
+                  className={cn(
+                    'px-2 py-0.5 rounded-md font-medium transition-all text-xs flex items-center gap-1',
+                    flowchartLayout === 'canvas'
+                      ? 'bg-white dark:bg-secondary-700 text-primary-600 dark:text-primary-400 shadow-2xs font-bold'
+                      : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                  )}
+                  title="Switch Canvas to Full Width (hides code for spacious visual editing)"
+                >
+                  <Maximize2 className="w-3 h-3" />
+                  <span>Full Canvas</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFlowchartLayout('code')}
+                  className={cn(
+                    'px-2 py-0.5 rounded-md font-medium transition-all text-xs flex items-center gap-1',
+                    flowchartLayout === 'code'
+                      ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-2xs font-semibold'
+                      : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                  )}
+                  title="Code editor only"
+                >
+                  <span>Code</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -949,7 +994,10 @@ export function NoteEditorPage() {
           </div>
         </div>
         <div className="flex-1 min-h-0 flex overflow-hidden">
-          <div className="w-1/2 border-r border-secondary-200 dark:border-secondary-700 flex flex-col overflow-hidden font-mono text-sm bg-secondary-50 dark:bg-secondary-950">
+          <div className={cn(
+            'border-r border-secondary-200 dark:border-secondary-700 flex flex-col overflow-hidden font-mono text-sm bg-secondary-50 dark:bg-secondary-950 transition-all',
+            flowchartLayout === 'canvas' ? 'hidden' : flowchartLayout === 'split' ? 'w-1/2' : 'w-full'
+          )}>
             {flowchartInputMode === 'outline' ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <div className="px-3 py-1.5 bg-amber-500/10 border-b border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-300 flex items-center justify-between">
@@ -1001,7 +1049,10 @@ export function NoteEditorPage() {
               />
             )}
           </div>
-          <div className="w-1/2 flex flex-col overflow-hidden bg-secondary-900">
+          <div className={cn(
+            'flex flex-col overflow-hidden bg-secondary-900 transition-all',
+            flowchartLayout === 'code' ? 'hidden' : flowchartLayout === 'split' ? 'w-1/2' : 'w-full'
+          )}>
             {flowchartError ? (
               <div className="h-full flex flex-col justify-center items-center p-4 overflow-y-auto scrollbar-thin">
                 <div className="w-full max-w-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-2xl p-5 text-left shadow-sm">

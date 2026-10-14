@@ -19,6 +19,7 @@ export function FlowchartEditorPage() {
   const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
   const [showPreview, setShowPreview] = useState(true);
+  const [layoutMode, setLayoutMode] = useState<'split' | 'canvas' | 'code'>('split');
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState('default');
   const [direction, setDirection] = useState('TD');
@@ -133,6 +134,49 @@ export function FlowchartEditorPage() {
                 <option value="BT">Bottom-Up</option>
               </select>
             </div>
+            {/* View Layout Mode: Split vs Full Canvas vs Code Only */}
+            <div className="flex items-center rounded-lg bg-secondary-100 dark:bg-secondary-800 p-0.5 border border-secondary-200 dark:border-secondary-700 text-xs">
+              <button
+                type="button"
+                onClick={() => setLayoutMode('split')}
+                className={cn(
+                  'px-2 py-1 rounded-md font-medium transition-all text-xs flex items-center gap-1',
+                  layoutMode === 'split'
+                    ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-2xs font-semibold'
+                    : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                )}
+                title="Side-by-side Split View"
+              >
+                <span>Split</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLayoutMode('canvas')}
+                className={cn(
+                  'px-2 py-1 rounded-md font-medium transition-all text-xs flex items-center gap-1',
+                  layoutMode === 'canvas'
+                    ? 'bg-white dark:bg-secondary-700 text-primary-600 dark:text-primary-400 shadow-2xs font-bold'
+                    : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                )}
+                title="Switch Canvas to Full Width (hides code for spacious visual editing)"
+              >
+                <Maximize2 className="w-3 h-3" />
+                <span>Full Canvas</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLayoutMode('code')}
+                className={cn(
+                  'px-2 py-1 rounded-md font-medium transition-all text-xs flex items-center gap-1',
+                  layoutMode === 'code'
+                    ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-2xs font-semibold'
+                    : 'text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white'
+                )}
+                title="Code editor only"
+              >
+                <span>Code</span>
+              </button>
+            </div>
             <button onClick={() => setShowTemplates(!showTemplates)} className="btn-secondary flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Templates</button>
             <button onClick={() => setIsFullscreen(!isFullscreen)} className="btn-ghost p-2" aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}</button>
           </div>
@@ -177,7 +221,10 @@ export function FlowchartEditorPage() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className={cn('w-1/2 border-r border-secondary-200 dark:border-secondary-700 overflow-auto', !showPreview && 'w-full')}>
+        <div className={cn(
+          'border-r border-secondary-200 dark:border-secondary-700 overflow-auto transition-all',
+          layoutMode === 'canvas' ? 'hidden' : layoutMode === 'split' ? 'w-1/2' : 'w-full'
+        )}>
           <div className="h-full flex flex-col">
             <div className="p-2 border-b border-secondary-200 dark:border-secondary-700 flex items-center justify-between">
               <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">Editor</span>
@@ -197,7 +244,10 @@ export function FlowchartEditorPage() {
           </div>
         </div>
 
-        <div className={cn('w-1/2 overflow-auto bg-white dark:bg-secondary-900', !showPreview && 'hidden')}>
+        <div className={cn(
+          'overflow-auto bg-white dark:bg-secondary-900 transition-all',
+          layoutMode === 'code' ? 'hidden' : layoutMode === 'split' ? 'w-1/2' : 'w-full'
+        )}>
           <div className="h-full flex flex-col">
             <div className="p-2 border-b border-secondary-200 dark:border-secondary-700 flex items-center justify-between">
               <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">Preview</span>

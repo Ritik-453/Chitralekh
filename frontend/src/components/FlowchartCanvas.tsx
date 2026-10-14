@@ -72,11 +72,12 @@ export function FlowchartCanvas({
   // Shape picker dropdown
   const [showShapePicker, setShowShapePicker] = useState(false);
 
-  // Zoom and Pan
+  // Zoom, Pan & Fullscreen
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Parsed nodes map
   const parsedNodes = useRef<FlowchartNode[]>([]);
@@ -300,10 +301,97 @@ export function FlowchartCanvas({
     setIsPanning(false);
   };
 
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  const hasAutoFitted = useRef(false);
+
   const resetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
   };
+
+  const fitView = useCallback(() => {
+    if (!containerRef.current || !contentWrapperRef.current) return;
+    const svgEl = contentWrapperRef.current.querySelector('svg');
+    if (!svgEl) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+      return;
+    }
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const svgRect = svgEl.getBoundingClientRect();
+
+    setPan({ x: 0, y: 0 });
+
+    let unscaledW = 0;
+    let unscaledH = 0;
+
+    // Check viewBox first for true coordinate width/height
+    if (svgEl.viewBox && svgEl.viewBox.baseVal && svgEl.viewBox.baseVal.width > 0) {
+      unscaledW = svgEl.viewBox.baseVal.width;
+      unscaledH = svgEl.viewBox.baseVal.height;
+    } else {
+      const vb = svgEl.getAttribute('viewBox');
+      if (vb) {
+        const parts = vb.trim().split(/[\s,]+/).map(Number);
+        if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+          unscaledW = parts[2];
+          unscaledH = parts[3];
+        }
+      }
+    }
+
+    if (!unscaledW || !unscaledH) {
+      const currentScale = zoomRef.current || 1;
+      unscaledW = svgRect.width / currentScale;
+      unscaledH = svgRect.height / currentScale;
+    }
+
+    if (unscaledW > 0 && unscaledH > 0 && containerRect.width > 0 && containerRect.height > 0) {
+      const scaleX = (containerRect.width * 0.90) / unscaledW;
+      const scaleY = (containerRect.height * 0.88) / unscaledH;
+      const optimal = Math.min(Math.max(Math.min(scaleX, scaleY), 0.25), 2.5);
+      setZoom(Number(optimal.toFixed(2)));
+    } else {
+      setZoom(1);
+    }
+  }, []);
+
+  // Auto-fit on first SVG render
+  useEffect(() => {
+    if (svg && !hasAutoFitted.current) {
+      hasAutoFitted.current = true;
+      const timer = setTimeout(() => fitView(), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [svg, fitView]);
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => {
+      const next = !prev;
+      setTimeout(() => fitView(), 120);
+      return next;
+    });
+  }, [fitView]);
+
+  // Keyboard shortcut listener: F to toggle fullscreen, Esc to exit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen, toggleFullscreen]);
 
   return (
     <div
@@ -313,7 +401,9 @@ export function FlowchartCanvas({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className={`relative w-full h-full flex flex-col overflow-hidden select-none bg-secondary-900 ${className}`}
+      className={`relative w-full h-full flex flex-col overflow-hidden select-none bg-secondary-950 transition-all ${
+        isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen' : ''
+      } ${className}`}
     >
       {/* Top Floating Visual Builder Toolbar (flowchart.fun inspiration) */}
       <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-none">
@@ -388,31 +478,65 @@ export function FlowchartCanvas({
           </div>
         </div>
 
-        {/* Right Side: Zoom & View Controls */}
+        {/* Right Side: Zoom, Fit & Fullscreen Controls */}
         <div className="pointer-events-auto flex items-center gap-1 p-1.5 rounded-xl bg-secondary-900/90 backdrop-blur-md border border-secondary-700/80 shadow-lg text-xs text-white">
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.max(0.4, z - 0.15))}
-            className="p-1.5 rounded-lg hover:bg-secondary-800 text-secondary-300 hover:text-white"
-            title="Zoom Out"
+            onClick={() => setZoom((z) => Math.max(0.3, z - 0.15))}
+            className="p-1.5 rounded-lg hover:bg-secondary-800 text-secondary-300 hover:text-white transition-all active:scale-95"
+            title="Zoom Out (-)"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
+            onClick={fitView}
+            className="px-2 py-1 rounded-lg hover:bg-secondary-800 text-secondary-300 hover:text-white font-mono text-[11px] transition-all"
+            title="Auto-Fit to Screen"
+          >
+            Fit
+          </button>
+          <button
+            type="button"
             onClick={resetView}
-            className="px-2 py-1 rounded-lg hover:bg-secondary-800 text-secondary-300 hover:text-white font-mono text-[11px]"
-            title="Reset Zoom & Pan"
+            className="px-2 py-1 rounded-lg hover:bg-secondary-800 text-secondary-300 hover:text-white font-mono text-[11px] transition-all"
+            title="Reset Zoom to 100%"
           >
             {Math.round(zoom * 100)}%
           </button>
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.min(2.5, z + 0.15))}
-            className="p-1.5 rounded-lg hover:bg-secondary-800 text-secondary-300 hover:text-white"
-            title="Zoom In"
+            onClick={() => setZoom((z) => Math.min(2.8, z + 0.15))}
+            className="p-1.5 rounded-lg hover:bg-secondary-800 text-secondary-300 hover:text-white transition-all active:scale-95"
+            title="Zoom In (+)"
           >
             <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="h-4 w-px bg-secondary-700 mx-1" />
+
+          {/* Fullscreen Button */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all active:scale-95 font-medium shadow-sm ${
+              isFullscreen
+                ? 'bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold'
+                : 'bg-primary-600 hover:bg-primary-500 text-white'
+            }`}
+            title={isFullscreen ? 'Exit Fullscreen (Esc or F)' : 'Expand Canvas to Fullscreen (F)'}
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5" />
+                <span>Exit Fullscreen</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Fullscreen</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -613,15 +737,15 @@ export function FlowchartCanvas({
       >
         <div
           ref={contentWrapperRef}
-          className="w-full flex items-center justify-center"
+          className="w-full flex items-center justify-center [&_svg]:max-w-none [&_svg]:h-auto [&_svg]:w-auto"
           dangerouslySetInnerHTML={{ __html: svg }}
         />
       </div>
 
       {/* Bottom Hint */}
-      <div className="absolute bottom-3 left-4 text-[11px] text-secondary-500 pointer-events-none flex items-center gap-2">
-        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-        <span>Click node to edit name, add branch or change shape • Double-click to rename • Ctrl+Scroll to zoom</span>
+      <div className="absolute bottom-3 left-4 text-[11px] text-secondary-400 pointer-events-none flex items-center gap-2 bg-secondary-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-secondary-800 shadow-md">
+        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <span>Click node to edit • Double-click to rename • Press <strong>F</strong> for Fullscreen • Drag to Pan</span>
       </div>
     </div>
   );
